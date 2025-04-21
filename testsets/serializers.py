@@ -8,6 +8,7 @@ class TestSetSerializer(serializers.ModelSerializer):
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(), source='category', write_only=True
     )
+    questions = serializers.PrimaryKeyRelatedField(many=True, read_only=True, source='question_set')
 
     class Meta:
         model = TestSet
@@ -18,6 +19,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     testset_id = serializers.PrimaryKeyRelatedField(
         queryset=TestSet.objects.all(), source='testset', write_only=True
     )
+    options = serializers.PrimaryKeyRelatedField(many=True, read_only=True, source='option_set')
 
     class Meta:
         model = Question
