@@ -18,6 +18,7 @@ urlpatterns = [
     
     # API endpoints
     path('api/v1/', include([
+        path('users/', include('users.urls')),
         path('categories/', include('categories.urls')),
         path('testsets/', include('testsets.urls')),
         path('attempts/', include('attempts.urls')),

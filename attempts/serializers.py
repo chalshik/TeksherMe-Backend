@@ -10,6 +10,7 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 class TestAttemptSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True, read_only=True, source='answer_set')
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     
     class Meta:
         model = TestAttempt

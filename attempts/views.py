@@ -16,11 +16,18 @@ class TestAttemptViewSet(viewsets.ModelViewSet):
         This view returns a list of all test attempts,
         or filtered by test set if a testset_id query parameter is provided.
         """
-        queryset = TestAttempt.objects.all()
+        # Filter attempts to show only those belonging to the current user
+        queryset = TestAttempt.objects.filter(user=self.request.user)
         testset_id = self.request.query_params.get('testset_id')
         if testset_id is not None:
             queryset = queryset.filter(testset_id=testset_id)
         return queryset
+        
+    def perform_create(self, serializer):
+        """
+        Automatically associate the attempt with the logged-in user
+        """
+        serializer.save(user=self.request.user)
 
 
 class AnswerViewSet(viewsets.ModelViewSet):
@@ -34,7 +41,10 @@ class AnswerViewSet(viewsets.ModelViewSet):
         This view returns a list of all answers,
         or filtered by attempt if an attempt_id query parameter is provided.
         """
-        queryset = Answer.objects.all()
+        # Filter answers to show only those related to the current user's attempts
+        user_attempts = TestAttempt.objects.filter(user=self.request.user).values_list('id', flat=True)
+        queryset = Answer.objects.filter(attempt_id__in=user_attempts)
+        
         attempt_id = self.request.query_params.get('attempt_id')
         if attempt_id is not None:
             queryset = queryset.filter(attempt_id=attempt_id)
