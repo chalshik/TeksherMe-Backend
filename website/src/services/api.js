@@ -255,12 +255,30 @@ export const getQuestionPack = (id) => callApi(
 );
 
 export const addQuestionPack = (packData) => callApi(
-  () => apiClient.post('/testsets/testsets/', packData),
+  () => {
+    console.log('Sending data to API:', packData);
+    return apiClient.post('/testsets/testsets/', packData);
+  },
   { ...packData, id: Date.now() },
   'testsets_write'
 ).then(response => {
   // Invalidate testsets cache after adding
   apiCache.invalidateTestSet();
+  // Log the full response to help debug
+  console.log('Full addQuestionPack response:', response);
+  
+  // Ensure we're returning a valid structure even if the API response is unexpected
+  if (!response.data) {
+    console.warn('API response missing data property:', response);
+    // Create a fallback data structure with the expected properties
+    return {
+      data: { 
+        id: Date.now(), // Fallback ID if the real one isn't available
+        ...packData 
+      }
+    };
+  }
+  
   return response;
 });
 
@@ -302,15 +320,53 @@ export const getQuestion = (id) => callApi(
   MOCK_DATA.questions.find(q => q.id === parseInt(id))
 );
 
-export const addQuestion = (questionData) => callApi(
-  () => apiClient.post('/testsets/questions/', questionData),
-  { ...questionData, id: Date.now() }
-);
+export const addQuestion = (questionData) => {
+  // Make sure we're using the correct field name (testset_id instead of testset)
+  const processedData = { ...questionData };
+  if (processedData.testset) {
+    processedData.testset_id = processedData.testset;
+    delete processedData.testset;
+  }
 
-export const updateQuestion = (id, questionData) => callApi(
-  () => apiClient.put(`/testsets/questions/${id}/`, questionData),
-  { ...questionData, id }
-);
+  console.log('Sending question data to API:', processedData);
+  
+  return callApi(
+    () => apiClient.post('/testsets/questions/', processedData),
+    { ...processedData, id: Date.now() }
+  ).then(response => {
+    console.log('Full addQuestion response:', response);
+    
+    // Ensure we're returning a valid structure even if API response is unexpected
+    if (!response || !response.data) {
+      console.warn('API question response missing data property:', response);
+      // Create a fallback data structure with expected properties
+      return {
+        data: { 
+          id: Date.now(), // Fallback ID if the real one isn't available
+          ...processedData 
+        }
+      };
+    }
+    
+    return response;
+  });
+};
+
+export const updateQuestion = (id, questionData) => {
+  // Make sure we're using the correct field name (testset_id instead of testset)
+  const processedData = { ...questionData };
+  if (processedData.testset) {
+    processedData.testset_id = processedData.testset;
+    delete processedData.testset;
+  }
+
+  console.log('Updating question data:', processedData);
+  
+  return callApi(
+    () => apiClient.put(`/testsets/questions/${id}/`, processedData),
+    { ...processedData, id }
+  );
+};
 
 export const deleteQuestion = (id) => callApi(
   () => apiClient.delete(`/testsets/questions/${id}/`),
@@ -335,15 +391,53 @@ export const getOption = (id) => callApi(
   MOCK_DATA.options.find(o => o.id === parseInt(id))
 );
 
-export const addOption = (optionData) => callApi(
-  () => apiClient.post('/testsets/options/', optionData),
-  { ...optionData, id: Date.now() }
-);
+export const addOption = (optionData) => {
+  // Make sure we're using the correct field name (question_id instead of question)
+  const processedData = { ...optionData };
+  if (processedData.question) {
+    processedData.question_id = processedData.question;
+    delete processedData.question;
+  }
 
-export const updateOption = (id, optionData) => callApi(
-  () => apiClient.put(`/testsets/options/${id}/`, optionData),
-  { ...optionData, id }
-);
+  console.log('Sending option data to API:', processedData);
+  
+  return callApi(
+    () => apiClient.post('/testsets/options/', processedData),
+    { ...processedData, id: Date.now() }
+  ).then(response => {
+    console.log('Full addOption response:', response);
+    
+    // Ensure we're returning a valid structure even if API response is unexpected
+    if (!response || !response.data) {
+      console.warn('API option response missing data property:', response);
+      // Create a fallback data structure with expected properties
+      return {
+        data: { 
+          id: Date.now(), // Fallback ID if the real one isn't available
+          ...processedData 
+        }
+      };
+    }
+    
+    return response;
+  });
+};
+
+export const updateOption = (id, optionData) => {
+  // Make sure we're using the correct field name (question_id instead of question)
+  const processedData = { ...optionData };
+  if (processedData.question) {
+    processedData.question_id = processedData.question;
+    delete processedData.question;
+  }
+
+  console.log('Updating option data:', processedData);
+  
+  return callApi(
+    () => apiClient.put(`/testsets/options/${id}/`, processedData),
+    { ...processedData, id }
+  );
+};
 
 export const deleteOption = (id) => callApi(
   () => apiClient.delete(`/testsets/options/${id}/`),

@@ -5,13 +5,22 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.http import HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound
 from django.views.static import serve
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 # Simple 404 view for non-website paths
 def not_found(request):
     return HttpResponseNotFound("<h1>Page not found</h1>")
+
+# Simple API documentation views
+def api_schema(request):
+    return HttpResponse("<h1>API Schema</h1><p>API documentation is temporarily disabled.</p>")
+
+def swagger_ui(request):
+    return HttpResponse("<h1>Swagger UI</h1><p>Swagger UI is temporarily disabled.</p>")
+
+def redoc_view(request):
+    return HttpResponse("<h1>ReDoc</h1><p>ReDoc is temporarily disabled.</p>")
 
 urlpatterns = [
     # Admin routes
@@ -28,10 +37,10 @@ urlpatterns = [
     
     path('api-auth/', include('rest_framework.urls')),
 
-    # OpenAPI schema and docs
-    path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # Simple API documentation endpoints
+    path('schema/', api_schema, name='schema'),
+    path('swagger/', swagger_ui, name='swagger-ui'),
+    path('redoc/', redoc_view, name='redoc'),
     
     # Serve PWA manifest and icons
     path('manifest.json', serve, {'document_root': settings.BASE_DIR / 'website/build', 'path': 'manifest.json'}),

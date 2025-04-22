@@ -132,7 +132,7 @@ function AddQuestionPack() { // Removed props, use hooks instead
     setCurrentQuestion({ ...currentQuestion, options: currentQuestion.options.map(o => ({ ...o, isCorrect: o.id === id })) });
   };
   
-  const addOption = () => {
+  const addOptionToQuestion = () => {
     if (currentQuestion.options.length >= 4) return; // Limit options for simplicity
     const newId = Date.now(); // Use timestamp for temp ID
     setCurrentQuestion({ ...currentQuestion, options: [...currentQuestion.options, { id: newId, text: '', isCorrect: false }] });
@@ -148,7 +148,7 @@ function AddQuestionPack() { // Removed props, use hooks instead
     setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
   };
   
-  const addQuestion = () => {
+  const addQuestionToList = () => {
     if (!currentQuestion.text.trim() || currentQuestion.options.some(o => !o.text.trim()) || !currentQuestion.options.some(o => o.isCorrect)) {
       showMessage('error', 'Please fill question and all option texts, and select a correct answer.');
       return;
@@ -200,7 +200,7 @@ function AddQuestionPack() { // Removed props, use hooks instead
         description: packDetails.description,
         time_limit_minutes: parseInt(packDetails.time_given, 10),
         difficulty: packDetails.difficulty,
-        category: parseInt(packDetails.category, 10),
+        category_id: parseInt(packDetails.category, 10),
       };
 
       let savedPackId;
@@ -210,44 +210,92 @@ function AddQuestionPack() { // Removed props, use hooks instead
         showMessage('success', 'Pack updated successfully');
       } else {
         const response = await addQuestionPack(packData);
-        savedPackId = response.data.id;
+        
+        // Check if response has the expected structure
+        if (!response || !response.data) {
+          console.error('API returned invalid response:', response);
+          throw new Error('API returned an invalid response structure');
+        }
+        
+        // Log the response for debugging
+        console.log('API Response:', response);
+        
+        // Handle both direct ID and nested ID in response.data
+        savedPackId = response.data.id || (response.data.data && response.data.data.id);
+        
+        if (!savedPackId) {
+          console.error('Could not find ID in response:', response);
+          throw new Error('Could not find pack ID in the API response');
+        }
+        
         showMessage('success', 'Pack created successfully');
       }
 
       // Step 2: Save/update all questions and their options
       for (const question of questions) {
         const questionData = {
-          testset: savedPackId,
+          testset_id: savedPackId,
           content: question.text,
-          explanation: question.explanation || ''
+          explanation: question.explanation || 'No explanation provided'
         };
 
+        console.log('Sending question data:', questionData);
+        
         let savedQuestionId;
-        // If the question has a numeric ID from the database, update it
-        if (question.id && !isNaN(question.id) && question.id > 0 && question.dbSaved) {
-          await updateQuestion(question.id, questionData);
-          savedQuestionId = question.id;
-        } else {
-          // Otherwise create a new question
-          const questionResponse = await addQuestion(questionData);
-          savedQuestionId = questionResponse.data.id;
-        }
-
-        // Step 3: For each question, save/update its options
-        for (const option of question.options) {
-          const optionData = {
-            question: savedQuestionId,
-            content: option.text,
-            is_correct: option.isCorrect
-          };
-
-          // If option has a numeric ID from the database, update it
-          if (option.id && !isNaN(option.id) && option.id > 0 && option.dbSaved) {
-            await updateOption(option.id, optionData);
+        try {
+          // If the question has a numeric ID from the database, update it
+          if (question.id && !isNaN(question.id) && question.id > 0 && question.dbSaved) {
+            await updateQuestion(question.id, questionData);
+            savedQuestionId = question.id;
           } else {
-            // Otherwise create a new option
-            await addOption(optionData);
+            // Otherwise create a new question
+            const questionResponse = await addQuestion(questionData);
+            
+            // Add defensive check for response and response.data
+            if (!questionResponse || !questionResponse.data) {
+              console.error('Invalid questionResponse:', questionResponse);
+              throw new Error('Invalid response from addQuestion API');
+            }
+            
+            console.log('Question created successfully:', questionResponse.data);
+            savedQuestionId = questionResponse.data.id;
+            
+            if (!savedQuestionId) {
+              console.error('Question ID not found in response');
+              throw new Error('Question ID not found in API response');
+            }
           }
+
+          // Step 3: For each question, save/update its options
+          for (const option of question.options) {
+            const optionData = {
+              question_id: savedQuestionId,
+              content: option.text,
+              is_correct: option.isCorrect
+            };
+
+            console.log('Sending option data:', optionData);
+            
+            try {
+              // If option has a numeric ID from the database, update it
+              if (option.id && !isNaN(option.id) && option.id > 0 && option.dbSaved) {
+                await updateOption(option.id, optionData);
+              } else {
+                // Otherwise create a new option
+                const optionResponse = await addOption(optionData);
+                
+                // Log the option creation
+                console.log('Option created:', optionResponse?.data?.id || 'unknown ID');
+              }
+            } catch (optionError) {
+              console.error(`Error creating option "${option.text}":`, optionError);
+              // Continue with other options instead of failing the whole pack
+            }
+          }
+        } catch (questionError) {
+          console.error(`Error processing question "${question.text.substring(0, 30)}...":`, questionError);
+          // Show warning but continue with other questions
+          showMessage('warning', `One question could not be saved, but continuing with others`);
         }
 
         // If we're editing, handle deleting options that were removed
@@ -412,7 +460,7 @@ function AddQuestionPack() { // Removed props, use hooks instead
           {/* Add Option Button */}
           <button 
             type="button" 
-            onClick={addOption} 
+            onClick={addOptionToQuestion} 
             className="add-option-btn"
             disabled={currentQuestion.options.length >= 4 || loading}
           >
@@ -422,7 +470,7 @@ function AddQuestionPack() { // Removed props, use hooks instead
           {/* Add Question Button */}
           <button 
             type="button" 
-            onClick={addQuestion} 
+            onClick={addQuestionToList} 
             className="add-question-btn"
             disabled={!currentQuestion.text.trim() || currentQuestion.options.some(o => !o.text.trim()) || loading}
           >

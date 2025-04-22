@@ -23,7 +23,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'testset', 'testset_id', 'content', 'explanation', 'created_at']
+        fields = ['id', 'testset', 'testset_id', 'content', 'explanation', 'created_at', 'options']
 
 class OptionSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)
