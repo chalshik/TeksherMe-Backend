@@ -1,0 +1,696 @@
+import axios from 'axios';
+
+// Set to true to use mock data, false to use the real API
+const USE_MOCK_DATA = false;
+
+// Fix API base URL to ensure it points to the correct location
+const API_BASE_URL = 'http://localhost:8000/api/v1';
+
+// Mock data for fallback when API is unavailable
+const MOCK_DATA = {
+  categories: [
+    { id: 1, name: 'JavaScript' },
+    { id: 2, name: 'Python' },
+    { id: 3, name: 'Java' },
+    { id: 4, name: 'C#' }
+  ],
+  testsets: [
+    { 
+      id: 1, 
+      title: 'JavaScript Basics',
+      description: 'Test your knowledge of JavaScript fundamentals',
+      time_limit_minutes: 30,
+      difficulty: 'Easy',
+      category: 1
+    },
+    { 
+      id: 2, 
+      title: 'Python Data Structures',
+      description: 'Advanced quiz on Python data structures',
+      time_limit_minutes: 45,
+      difficulty: 'Medium',
+      category: 2
+    }
+  ],
+  questions: [
+    {
+      id: 1,
+      testset: 1,
+      content: 'What is the output of: console.log(typeof [])?',
+      explanation: 'In JavaScript, arrays are objects, so typeof [] returns "object"'
+    },
+    {
+      id: 2,
+      testset: 1,
+      content: 'Which method adds an element to the end of an array?',
+      explanation: 'The push() method adds new items to the end of an array'
+    }
+  ],
+  options: [
+    { id: 1, question: 1, content: '"object"', is_correct: true },
+    { id: 2, question: 1, content: '"array"', is_correct: false },
+    { id: 3, question: 1, content: '"undefined"', is_correct: false },
+    { id: 4, question: 1, content: '"string"', is_correct: false },
+    { id: 5, question: 2, content: 'push()', is_correct: true },
+    { id: 6, question: 2, content: 'pop()', is_correct: false },
+    { id: 7, question: 2, content: 'shift()', is_correct: false },
+    { id: 8, question: 2, content: 'unshift()', is_correct: false }
+  ]
+};
+
+// Configure axios client
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  // Add withCredentials to include cookies in cross-site requests
+  withCredentials: true,
+});
+
+// Add a request interceptor to include auth token if available
+apiClient.interceptors.request.use(config => {
+  const user = localStorage.getItem('user');
+  if (user) {
+    const userData = JSON.parse(user);
+    if (userData.token) {
+      config.headers['Authorization'] = `Bearer ${userData.token}`;
+    }
+  }
+  return config;
+});
+
+// Add a response interceptor to catch and log errors
+apiClient.interceptors.response.use(
+  response => response, 
+  error => {
+    console.error('API Error Response:', error.response ? error.response.data : error.message);
+    return Promise.reject(error);
+  }
+);
+
+// Cache to store API responses
+export const apiCache = {
+  data: {},
+  timestamps: {},
+  // Cache expiration time in milliseconds (5 minutes)
+  expirationTime: 5 * 60 * 1000,
+  
+  // Get data from cache if available and not expired
+  get(key) {
+    const timestamp = this.timestamps[key];
+    const now = Date.now();
+    
+    // Check if cache exists and is still valid
+    if (timestamp && now - timestamp < this.expirationTime) {
+      return this.data[key];
+    }
+    
+    return null;
+  },
+  
+  // Store data in cache
+  set(key, data) {
+    this.data[key] = data;
+    this.timestamps[key] = Date.now();
+  },
+  
+  // Remove item from cache
+  remove(key) {
+    delete this.data[key];
+    delete this.timestamps[key];
+  },
+  
+  // Clear category-specific data from cache
+  invalidateCategory(id) {
+    this.remove('categories');
+    this.remove(`category_${id}`);
+  },
+  
+  // Clear testset-specific data from cache
+  invalidateTestSet(id) {
+    this.remove('testsets');
+    if (id) {
+      this.remove(`testset_${id}`);
+    } else {
+      // Clear all testset-related caches if no ID is provided
+      Object.keys(this.data).forEach(key => {
+        if (key.startsWith('testset_') || key.startsWith('testsets_')) {
+          this.remove(key);
+        }
+      });
+    }
+  }
+};
+
+// Helper function to handle API calls with optional fallback to mock data and caching
+const callApi = async (apiCall, mockResponse, cacheKey = null) => {
+  if (USE_MOCK_DATA) {
+    console.log('Using mock data (MOCK MODE ENABLED)');
+    return {
+      data: mockResponse,
+      status: 200,
+      statusText: 'OK (MOCK)',
+      headers: {},
+      config: {}
+    };
+  }
+  
+  // Try to get from cache if a cacheKey is provided
+  if (cacheKey && !cacheKey.includes('_write')) {
+    const cachedData = apiCache.get(cacheKey);
+    if (cachedData) {
+      console.log(`Using cached data for: ${cacheKey}`);
+      return cachedData;
+    }
+  }
+  
+  try {
+    const response = await apiCall();
+    console.log('API Success Response:', response.data);
+    
+    // Store in cache if cacheKey is provided
+    if (cacheKey && !cacheKey.includes('_write')) {
+      apiCache.set(cacheKey, response);
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('API call failed:', error);
+    throw error; // Re-throw the error instead of falling back to mock data
+  }
+};
+
+// --- Category Endpoints ---
+export const getCategories = () => callApi(
+  () => apiClient.get('/categories/categories/'),
+  MOCK_DATA.categories,
+  'categories'
+);
+
+export const getCategory = (id) => callApi(
+  () => apiClient.get(`/categories/categories/${id}/`),
+  MOCK_DATA.categories.find(c => c.id === id),
+  `category_${id}`
+);
+
+export const addCategory = (categoryData) => callApi(
+  () => apiClient.post('/categories/categories/', categoryData),
+  { ...categoryData, id: Date.now() },
+  'categories_write'
+).then(response => {
+  // Invalidate category cache after adding a new category
+  apiCache.invalidateCategory();
+  return response;
+});
+
+export const updateCategory = (id, categoryData) => callApi(
+  () => apiClient.put(`/categories/categories/${id}/`, categoryData),
+  { ...categoryData, id },
+  `category_${id}_write`
+).then(response => {
+  // Invalidate category cache after update
+  apiCache.invalidateCategory(id);
+  return response;
+});
+
+export const deleteCategory = (id) => callApi(
+  () => apiClient.delete(`/categories/categories/${id}/`),
+  { success: true },
+  `category_${id}_delete`
+).then(response => {
+  // Invalidate category cache after delete
+  apiCache.invalidateCategory(id);
+  return response;
+});
+
+// --- Question Pack (TestSet) Endpoints ---
+export const getQuestionPacks = (filters = {}, fetchAllPages = false) => {
+  // Build query parameters for server-side filtering
+  const params = new URLSearchParams();
+  
+  // Extract special flags that shouldn't be sent to API
+  const bypassCache = filters._noCache || filters._forceRefresh;
+  const filtersCopy = { ...filters };
+  delete filtersCopy._noCache;
+  delete filtersCopy._forceRefresh;
+  
+  if (filtersCopy.category) {
+    params.append('category_id', filtersCopy.category);
+  }
+  
+  if (filtersCopy.difficulty) {
+    // Send difficulty in lowercase to match backend storage format
+    params.append('difficulty', filtersCopy.difficulty.toLowerCase());
+  }
+  
+  if (filtersCopy.search) {
+    params.append('search', filtersCopy.search);
+  }
+  
+  // Force a very large page size to get all results in one request
+  // This is a workaround for pagination issues
+  params.append('page_size', '1000');
+  
+  const queryString = params.toString();
+  const endpoint = queryString ? `/testsets/testsets/?${queryString}` : '/testsets/testsets/';
+  
+  // Create a unique cache key based on the filters
+  const cacheKey = queryString ? `testsets_${queryString}` : 'testsets';
+  
+  console.log(`API Request: ${endpoint}${bypassCache ? ' (bypassing cache)' : ''}`);
+  
+  // If we need to fetch all pages, we'll handle that here
+  if (fetchAllPages) {
+    return fetchAllPagesHelper(endpoint, bypassCache ? `${cacheKey}_${Date.now()}` : cacheKey);
+  }
+  
+  return callApi(
+    () => apiClient.get(endpoint),
+    MOCK_DATA.testsets,
+    // If _noCache or _forceRefresh is set, append a timestamp to make the cache key unique
+    bypassCache ? `${cacheKey}_${Date.now()}` : cacheKey
+  );
+};
+
+// Helper function to fetch all pages of paginated API results
+const fetchAllPagesHelper = async (initialEndpoint, cacheKey) => {
+  // Check cache first
+  const cachedData = apiCache.get(cacheKey);
+  if (cachedData) {
+    console.log(`Using cached data for: ${cacheKey}`);
+    return cachedData;
+  }
+  
+  let allResults = [];
+  let nextPageUrl = initialEndpoint;
+  
+  try {
+    while (nextPageUrl) {
+      console.log(`Fetching page: ${nextPageUrl}`);
+      let response;
+      
+      // Use full URL if it's an absolute URL, otherwise use the endpoint
+      if (nextPageUrl.startsWith('http')) {
+        // For absolute URLs, create a new axios instance with the same config as apiClient
+        response = await axios.get(nextPageUrl, {
+          withCredentials: true, // Important for CORS requests
+          headers: apiClient.defaults.headers // Use the same headers as apiClient
+        });
+      } else {
+        // For relative URLs, use the configured apiClient
+        response = await apiClient.get(nextPageUrl);
+      }
+      
+      console.log('Fetched page response:', response.data);
+      
+      if (response.data && response.data.results && Array.isArray(response.data.results)) {
+        // Add this page's results to our collection
+        allResults = [...allResults, ...response.data.results];
+        // Get the next page URL - this is a full URL from DRF pagination
+        nextPageUrl = response.data.next;
+        console.log('Next page URL:', nextPageUrl);
+      } else if (Array.isArray(response.data)) {
+        // If it's a direct array (not paginated), just use it
+        allResults = response.data;
+        break;
+      } else {
+        console.warn("Unexpected API response structure:", response.data);
+        break;
+      }
+    }
+    
+    console.log(`Total results after fetching all pages: ${allResults.length}`);
+    
+    // Create a response object that mimics the standard API response
+    const combinedResponse = {
+      data: allResults,
+      status: 200,
+      statusText: 'OK (Combined)',
+      headers: {},
+      config: {}
+    };
+    
+    // Store in cache
+    apiCache.set(cacheKey, combinedResponse);
+    
+    return combinedResponse;
+  } catch (error) {
+    console.error('Error fetching all pages:', error);
+    throw error;
+  }
+};
+
+export const getQuestionPack = (id) => {
+  // Ensure id is treated as a number
+  const numericId = parseInt(id, 10);
+  
+  console.log('Fetching question pack with ID:', numericId);
+  
+  if (isNaN(numericId)) {
+    console.error('Invalid pack ID:', id);
+    return Promise.reject(new Error('Invalid question pack ID'));
+  }
+  
+  return callApi(
+    () => apiClient.get(`/testsets/testsets/${numericId}/`),
+    MOCK_DATA.testsets.find(t => t.id === numericId),
+    `testset_${numericId}`
+  );
+};
+
+export const addQuestionPack = (packData) => callApi(
+  () => {
+    console.log('Sending data to API:', packData);
+    return apiClient.post('/testsets/testsets/', packData);
+  },
+  { ...packData, id: Date.now() },
+  'testsets_write'
+).then(response => {
+  // Invalidate testsets cache after adding
+  apiCache.invalidateTestSet();
+  // Log the full response to help debug
+  console.log('Full addQuestionPack response:', response);
+  
+  // Ensure we're returning a valid structure even if the API response is unexpected
+  if (!response.data) {
+    console.warn('API response missing data property:', response);
+    // Create a fallback data structure with the expected properties
+    return {
+      data: { 
+        id: Date.now(), // Fallback ID if the real one isn't available
+        ...packData 
+      }
+    };
+  }
+  
+  return response;
+});
+
+export const updateQuestionPack = (id, packData) => callApi(
+  () => apiClient.put(`/testsets/testsets/${id}/`, packData),
+  { ...packData, id },
+  `testset_${id}_write`
+).then(response => {
+  // Invalidate testset cache after update
+  apiCache.invalidateTestSet(id);
+  return response;
+});
+
+export const deleteQuestionPack = (id) => callApi(
+  () => apiClient.delete(`/testsets/testsets/${id}/`),
+  { success: true },
+  `testset_${id}_delete`
+).then(response => {
+  // Invalidate testset cache after delete
+  apiCache.invalidateTestSet(id);
+  return response;
+});
+
+// --- Question Endpoints ---
+export const getQuestions = (testsetId) => {
+  // If we have a testsetId, ensure it's numeric
+  let numericId = null;
+  if (testsetId) {
+    numericId = parseInt(testsetId, 10);
+    console.log('Fetching questions for testset ID:', numericId);
+    
+    if (isNaN(numericId)) {
+      console.error('Invalid testset ID:', testsetId);
+      return Promise.reject(new Error('Invalid testset ID'));
+    }
+  }
+  
+  return callApi(
+    () => {
+      if (numericId) {
+        return apiClient.get(`/testsets/questions/?testset_id=${numericId}`);
+      }
+      return apiClient.get('/testsets/questions/');
+    },
+    numericId 
+      ? MOCK_DATA.questions.filter(q => q.testset === numericId)
+      : MOCK_DATA.questions
+  );
+};
+
+export const getQuestion = (id) => callApi(
+  () => apiClient.get(`/testsets/questions/${id}/`),
+  MOCK_DATA.questions.find(q => q.id === parseInt(id))
+);
+
+export const addQuestion = (questionData) => {
+  // Make sure we're using the correct field name (testset_id instead of testset)
+  const processedData = { ...questionData };
+  if (processedData.testset) {
+    processedData.testset_id = processedData.testset;
+    delete processedData.testset;
+  }
+
+  console.log('Sending question data to API:', processedData);
+  
+  return callApi(
+    () => apiClient.post('/testsets/questions/', processedData),
+    { ...processedData, id: Date.now() }
+  ).then(response => {
+    console.log('Full addQuestion response:', response);
+    
+    // Ensure we're returning a valid structure even if API response is unexpected
+    if (!response || !response.data) {
+      console.warn('API question response missing data property:', response);
+      // Create a fallback data structure with expected properties
+      return {
+        data: { 
+          id: Date.now(), // Fallback ID if the real one isn't available
+          ...processedData 
+        }
+      };
+    }
+    
+    return response;
+  });
+};
+
+export const updateQuestion = (id, questionData) => {
+  // Make sure we're using the correct field name (testset_id instead of testset)
+  const processedData = { ...questionData };
+  if (processedData.testset) {
+    processedData.testset_id = processedData.testset;
+    delete processedData.testset;
+  }
+
+  console.log('Updating question data:', processedData);
+  
+  return callApi(
+    () => apiClient.put(`/testsets/questions/${id}/`, processedData),
+    { ...processedData, id }
+  );
+};
+
+export const deleteQuestion = (id) => callApi(
+  () => apiClient.delete(`/testsets/questions/${id}/`),
+  { success: true }
+);
+
+// --- Option Endpoints ---
+export const getOptions = (questionId) => {
+  // If we have a questionId, ensure it's numeric
+  let numericId = null;
+  if (questionId) {
+    numericId = parseInt(questionId, 10);
+    console.log('Fetching options for question ID:', numericId);
+    
+    if (isNaN(numericId)) {
+      console.error('Invalid question ID:', questionId);
+      return Promise.reject(new Error('Invalid question ID'));
+    }
+  }
+  
+  return callApi(
+    () => {
+      if (numericId) {
+        return apiClient.get(`/testsets/options/?question_id=${numericId}`);
+      }
+      return apiClient.get('/testsets/options/');
+    },
+    numericId 
+      ? MOCK_DATA.options.filter(o => o.question === numericId)
+      : MOCK_DATA.options
+  );
+};
+
+export const getOption = (id) => callApi(
+  () => apiClient.get(`/testsets/options/${id}/`),
+  MOCK_DATA.options.find(o => o.id === parseInt(id))
+);
+
+export const addOption = (optionData) => {
+  // Make sure we're using the correct field name (question_id instead of question)
+  const processedData = { ...optionData };
+  if (processedData.question) {
+    processedData.question_id = processedData.question;
+    delete processedData.question;
+  }
+
+  console.log('Sending option data to API:', processedData);
+  
+  return callApi(
+    () => apiClient.post('/testsets/options/', processedData),
+    { ...processedData, id: Date.now() }
+  ).then(response => {
+    console.log('Full addOption response:', response);
+    
+    // Ensure we're returning a valid structure even if API response is unexpected
+    if (!response || !response.data) {
+      console.warn('API option response missing data property:', response);
+      // Create a fallback data structure with expected properties
+      return {
+        data: { 
+          id: Date.now(), // Fallback ID if the real one isn't available
+          ...processedData 
+        }
+      };
+    }
+    
+    return response;
+  });
+};
+
+export const updateOption = (id, optionData) => {
+  // Make sure we're using the correct field name (question_id instead of question)
+  const processedData = { ...optionData };
+  if (processedData.question) {
+    processedData.question_id = processedData.question;
+    delete processedData.question;
+  }
+
+  console.log('Updating option data:', processedData);
+  
+  return callApi(
+    () => apiClient.put(`/testsets/options/${id}/`, processedData),
+    { ...processedData, id }
+  );
+};
+
+export const deleteOption = (id) => callApi(
+  () => apiClient.delete(`/testsets/options/${id}/`),
+  { success: true }
+);
+
+// --- Attempt Endpoints ---
+export const getAttempts = (testsetId) => callApi(
+  () => {
+    if (testsetId) {
+      return apiClient.get(`/attempts/attempts/?testset_id=${testsetId}`);
+    }
+    return apiClient.get('/attempts/attempts/');
+  },
+  []
+);
+
+export const getAttempt = (id) => callApi(
+  () => apiClient.get(`/attempts/attempts/${id}/`),
+  { id, user: 1, testset: 1, score_percent: 80, passed: true, duration_minutes: 25 }
+);
+
+export const addAttempt = (attemptData) => callApi(
+  () => apiClient.post('/attempts/attempts/', attemptData),
+  { ...attemptData, id: Date.now() }
+);
+
+export const updateAttempt = (id, attemptData) => callApi(
+  () => apiClient.put(`/attempts/attempts/${id}/`, attemptData),
+  { ...attemptData, id }
+);
+
+export const deleteAttempt = (id) => callApi(
+  () => apiClient.delete(`/attempts/attempts/${id}/`),
+  { success: true }
+);
+
+// --- Answer Endpoints ---
+export const getAnswers = (attemptId) => callApi(
+  () => {
+    if (attemptId) {
+      return apiClient.get(`/attempts/answers/?attempt_id=${attemptId}`);
+    }
+    return apiClient.get('/attempts/answers/');
+  },
+  []
+);
+
+export const getAnswer = (id) => callApi(
+  () => apiClient.get(`/attempts/answers/${id}/`),
+  { id, attempt: 1, question: 1, selected_option: 1, is_correct: true }
+);
+
+export const addAnswer = (answerData) => callApi(
+  () => apiClient.post('/attempts/answers/', answerData),
+  { ...answerData, id: Date.now() }
+);
+
+export const updateAnswer = (id, answerData) => callApi(
+  () => apiClient.put(`/attempts/answers/${id}/`, answerData),
+  { ...answerData, id }
+);
+
+export const deleteAnswer = (id) => callApi(
+  () => apiClient.delete(`/attempts/answers/${id}/`),
+  { success: true }
+);
+
+// --- Question Bookmark Endpoints ---
+export const getQuestionBookmarks = (testsetId, questionId) => callApi(
+  () => {
+    let url = '/bookmarks/question-bookmarks/';
+    const params = [];
+    if (testsetId) params.push(`testset_id=${testsetId}`);
+    if (questionId) params.push(`question_id=${questionId}`);
+    if (params.length) url += `?${params.join('&')}`;
+    return apiClient.get(url);
+  },
+  []
+);
+
+export const getQuestionBookmark = (id) => callApi(
+  () => apiClient.get(`/bookmarks/question-bookmarks/${id}/`),
+  { id, user: 1, testset: 1, question: 1 }
+);
+
+export const addQuestionBookmark = (bookmarkData) => callApi(
+  () => apiClient.post('/bookmarks/question-bookmarks/', bookmarkData),
+  { ...bookmarkData, id: Date.now() }
+);
+
+export const deleteQuestionBookmark = (id) => callApi(
+  () => apiClient.delete(`/bookmarks/question-bookmarks/${id}/`),
+  { success: true }
+);
+
+// --- TestSet Bookmark Endpoints ---
+export const getTestSetBookmarks = (testsetId) => callApi(
+  () => {
+    if (testsetId) {
+      return apiClient.get(`/bookmarks/testset-bookmarks/?testset_id=${testsetId}`);
+    }
+    return apiClient.get('/bookmarks/testset-bookmarks/');
+  },
+  []
+);
+
+export const getTestSetBookmark = (id) => callApi(
+  () => apiClient.get(`/bookmarks/testset-bookmarks/${id}/`),
+  { id, user: 1, testset: 1 }
+);
+
+export const addTestSetBookmark = (bookmarkData) => callApi(
+  () => apiClient.post('/bookmarks/testset-bookmarks/', bookmarkData),
+  { ...bookmarkData, id: Date.now() }
+);
+
+export const deleteTestSetBookmark = (id) => callApi(
+  () => apiClient.delete(`/bookmarks/testset-bookmarks/${id}/`),
+  { success: true }
+);
+
+export default apiClient; 
