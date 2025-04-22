@@ -1,32 +1,173 @@
-import React, { useState, useEffect } from 'react';
-import { questionPacks, categories, difficulties, deleteQuestionPack } from '../utils/dummyData';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { getQuestionPacks, getCategories, deleteQuestionPack } from '../services/api';
 import './QuestionPack.css';
 
-function QuestionPack({ navigateTo, initialCategory = '' }) {
-  const [packs, setPacks] = useState(questionPacks);
-  const [filteredPacks, setFilteredPacks] = useState(questionPacks);
+// Hardcode difficulties for filter dropdown
+const difficulties = ['Easy', 'Medium', 'Hard'];
+
+function QuestionPack() {
+  const navigate = useNavigate();
+  const [packs, setPacks] = useState([]);
+  const [filteredPacks, setFilteredPacks] = useState([]);
+  const [apiCategories, setApiCategories] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
-    category: initialCategory,
+    category: '',
     difficulty: '',
     search: ''
   });
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, packId: null });
+  // Keep track if initial data is loaded
+  const dataLoaded = useRef(false);
+  // Track if a delete operation is in progress
+  const [isDeleting, setIsDeleting] = useState(false);
+  // Track if filtering is in progress
+  const [isFiltering, setIsFiltering] = useState(false);
 
-  // Show filters automatically if an initial category is provided
+  // Fetch test sets and categories on component mount
   useEffect(() => {
-    if (initialCategory) {
-      setShowFilters(true);
+    const fetchData = async () => {
+      // Only show loading indicator on initial load, not during refreshes
+      if (!dataLoaded.current) {
+        setLoading(true);
+      }
+      
+      setError(null);
+      try {
+        const [testSetsResponse, categoriesResponse] = await Promise.all([
+          getQuestionPacks(),
+          getCategories()
+        ]);
+        
+        // Handle paginated response - extract results array if it exists
+        let fetchedPacks = [];
+        if (testSetsResponse.data) {
+          // If it's a paginated response with 'results' array
+          if (testSetsResponse.data.results) {
+            fetchedPacks = testSetsResponse.data.results;
+          }
+          // If it's a direct array
+          else if (Array.isArray(testSetsResponse.data)) {
+            fetchedPacks = testSetsResponse.data;
+          }
+          // If it's neither, log the structure for debugging
+          else {
+            console.warn("Unexpected API response structure:", testSetsResponse.data);
+            fetchedPacks = [];
+          }
+        }
+        
+        // Handle categories similarly
+        let fetchedCategories = [];
+        if (categoriesResponse.data) {
+          if (categoriesResponse.data.results) {
+            fetchedCategories = categoriesResponse.data.results;
+          } else if (Array.isArray(categoriesResponse.data)) {
+            fetchedCategories = categoriesResponse.data;
+          }
+        }
+        
+        setPacks(fetchedPacks);
+        // Initialize filteredPacks with the same data
+        setFilteredPacks(fetchedPacks);
+        setApiCategories(fetchedCategories);
+        dataLoaded.current = true;
+        
+      } catch (err) {
+        const errorMessage = err.response?.data?.detail || 
+          'Failed to fetch data from the API. Please check if the backend is running correctly.';
+        setError(errorMessage);
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Client-side filtering fallback - MOVED UP before the useEffect that uses it
+  const applyClientSideFilters = useCallback(() => {
+    if (!packs.length) return;
+    
+    let result = [...packs];
+
+    // Filter by category ID
+    if (filters.category) {
+      const categoryId = parseInt(filters.category, 10);
+      result = result.filter(pack => pack.category === categoryId);
     }
-  }, [initialCategory]);
 
-  // Apply filters whenever filters or packs change
-  useEffect(() => {
-    applyFilters();
+    // Filter by difficulty
+    if (filters.difficulty) {
+      // Make the filter case-insensitive for better matching
+      const difficultyLower = filters.difficulty.toLowerCase();
+      result = result.filter(pack => pack.difficulty && pack.difficulty.toLowerCase() === difficultyLower);
+    }
+
+    // Filter by search term (in title or description)
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      result = result.filter(
+        pack => (pack.title?.toLowerCase() || '').includes(searchTerm) || 
+                (pack.description?.toLowerCase() || '').includes(searchTerm)
+      );
+    }
+
+    setFilteredPacks(result);
   }, [filters, packs]);
 
+  // Fetch filtered packs when filters change
+  useEffect(() => {
+    // Skip the initial render to avoid double loading
+    if (!dataLoaded.current) return;
+    
+    // Only fetch if any filter is applied
+    const hasActiveFilters = filters.category || filters.difficulty || filters.search;
+    if (!hasActiveFilters) {
+      // Reset to initial data when no filters are applied
+      setFilteredPacks(packs);
+      return;
+    }
+    
+    const fetchFilteredData = async () => {
+      setIsFiltering(true);
+      try {
+        // Log the query being sent to API
+        console.log("Requesting filtered data with:", filters);
+        const response = await getQuestionPacks(filters);
+        console.log("Filtered API response:", response);
+        
+        // Handle paginated response
+        let filteredData = [];
+        if (response.data) {
+          if (response.data.results) {
+            filteredData = response.data.results;
+          } else if (Array.isArray(response.data)) {
+            filteredData = response.data;
+          }
+        }
+        
+        setFilteredPacks(filteredData);
+      } catch (err) {
+        console.error('Error fetching filtered data:', err);
+        // If server-side filtering fails, fall back to client-side filtering
+        applyClientSideFilters();
+      } finally {
+        setIsFiltering(false);
+      }
+    };
+    
+    // Debounce the fetch to avoid too many requests while typing
+    const timeoutId = setTimeout(fetchFilteredData, 300);
+    return () => clearTimeout(timeoutId);
+  }, [filters, packs, applyClientSideFilters]);
+
   const handleEditPack = (id) => {
-    navigateTo('edit-question-pack', id);
+    navigate(`/website/edit-question-pack/${id}`);
   };
 
   const toggleFilters = () => {
@@ -39,6 +180,9 @@ function QuestionPack({ navigateTo, initialCategory = '' }) {
       difficulty: '',
       search: ''
     });
+    
+    // Reset to initial data when filters are cleared
+    setFilteredPacks(packs);
   };
 
   const handleFilterChange = (e) => {
@@ -49,66 +193,53 @@ function QuestionPack({ navigateTo, initialCategory = '' }) {
     });
   };
 
-  const applyFilters = () => {
-    let result = [...packs];
-
-    // Filter by category
-    if (filters.category) {
-      result = result.filter(pack => pack.category === filters.category);
-    }
-
-    // Filter by difficulty
-    if (filters.difficulty) {
-      result = result.filter(pack => pack.difficulty === filters.difficulty);
-    }
-
-    // Filter by search term (in title or description)
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      result = result.filter(
-        pack => pack.title.toLowerCase().includes(searchTerm) || 
-                pack.description.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    setFilteredPacks(result);
-  };
-
   const confirmDelete = (e, packId) => {
-    e.stopPropagation(); // Prevent triggering the card click
+    e.stopPropagation();
     setDeleteConfirm({ show: true, packId });
   };
 
   const cancelDelete = (e) => {
-    e.stopPropagation(); // Prevent triggering the card click
+    if (e) e.stopPropagation();
     setDeleteConfirm({ show: false, packId: null });
   };
 
-  const handleDelete = (e) => {
-    e.stopPropagation(); // Prevent triggering the card click
+  const handleDelete = async (e) => {
+    if (e) e.stopPropagation();
     
     if (deleteConfirm.packId) {
-      // Delete the pack from the data
-      const updatedPacks = deleteQuestionPack(deleteConfirm.packId);
+      const packToDelete = deleteConfirm.packId;
+      setIsDeleting(true);
       
-      // Update local state with the updated packs
-      setPacks(updatedPacks);
-      
-      // Close the confirmation dialog
-      setDeleteConfirm({ show: false, packId: null });
+      try {
+        await deleteQuestionPack(packToDelete);
+        // Update local state immediately for optimistic UI update
+        setPacks(prevPacks => prevPacks.filter(pack => pack.id !== packToDelete));
+        setFilteredPacks(prevFilteredPacks => prevFilteredPacks.filter(pack => pack.id !== packToDelete));
+      } catch (err) {
+        setError('Failed to delete the question pack. Please try again.');
+        console.error('Error deleting pack:', err);
+      } finally {
+        setDeleteConfirm({ show: false, packId: null });
+        setIsDeleting(false);
+      }
     }
   };
+  
+  const getCategoryName = (categoryId) => {
+    const category = apiCategories.find(cat => cat.id === categoryId);
+    return category ? category.name : 'Unknown';
+  }
 
   return (
     <div className="question-pack">
       <div className="pack-header">
         <h1>Question Packs</h1>
         <div className="filter-controls">
-          <button className="filter-toggle" onClick={toggleFilters}>
+          <button className="filter-toggle" onClick={toggleFilters} disabled={loading}>
             🔍 {showFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
           {filters.category || filters.difficulty || filters.search ? (
-            <button className="filter-reset" onClick={resetFilters}>
+            <button className="filter-reset" onClick={resetFilters} disabled={loading || isFiltering}>
               Reset Filters
             </button>
           ) : null}
@@ -125,15 +256,21 @@ function QuestionPack({ navigateTo, initialCategory = '' }) {
               value={filters.search} 
               onChange={handleFilterChange} 
               placeholder="Search by title or description"
+              disabled={loading || isFiltering}
             />
           </div>
           
           <div className="filter-group">
             <label>Category</label>
-            <select name="category" value={filters.category} onChange={handleFilterChange}>
+            <select 
+              name="category" 
+              value={filters.category} 
+              onChange={handleFilterChange} 
+              disabled={loading || isFiltering || apiCategories.length === 0}
+            >
               <option value="">All Categories</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.name}>
+              {apiCategories.map(category => (
+                <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
@@ -142,73 +279,92 @@ function QuestionPack({ navigateTo, initialCategory = '' }) {
           
           <div className="filter-group">
             <label>Difficulty</label>
-            <select name="difficulty" value={filters.difficulty} onChange={handleFilterChange}>
+            <select 
+              name="difficulty" 
+              value={filters.difficulty} 
+              onChange={handleFilterChange} 
+              disabled={loading || isFiltering}
+            >
               <option value="">All Difficulties</option>
               {difficulties.map(difficulty => (
-                <option key={difficulty} value={difficulty}>
-                  {difficulty}
-                </option>
+                <option key={difficulty} value={difficulty}>{difficulty}</option>
               ))}
             </select>
           </div>
+          
+          {isFiltering && (
+            <div className="filter-loading">Filtering...</div>
+          )}
         </div>
       )}
       
-      <div className="pack-grid">
-        {filteredPacks.length > 0 ? (
-          filteredPacks.map(pack => (
-            <div 
-              className="pack-card" 
-              key={pack.id}
-              onClick={() => handleEditPack(pack.id)}
-            >
-              <div className="pack-actions">
-                <button 
-                  className="pack-delete-btn" 
-                  onClick={(e) => confirmDelete(e, pack.id)}
-                  title="Delete Pack"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="pack-title">{pack.title}</div>
-              <div className="pack-category">{pack.category}</div>
-              <div className="pack-description">{pack.description}</div>
-              <div className="pack-meta">
-                <div className="difficulty" data-difficulty={pack.difficulty.toLowerCase()}>
-                  {pack.difficulty}
-                </div>
-                <div className="time">{pack.timeGiven} min</div>
-                <div className="questions-count">{pack.questions.length} questions</div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="no-results">
-            <p>No question packs found matching your filters</p>
-            <button onClick={resetFilters}>Clear Filters</button>
-          </div>
-        )}
-      </div>
+      {loading && !isDeleting && !isFiltering && <div className="loading">Loading Question Packs...</div>}
+      {error && <div className="error">Error: {error}</div>}
 
-      {/* Delete Confirmation Modal */}
+      {!loading && (
+        <div className="pack-grid">
+          {filteredPacks.length > 0 ? (
+            filteredPacks.map(pack => (
+              <div 
+                className="pack-card" 
+                key={pack.id}
+                onClick={() => handleEditPack(pack.id)}
+                role="button" 
+                tabIndex="0"
+              >
+                <div className="pack-actions">
+                  <button 
+                    className="pack-delete-btn" 
+                    onClick={(e) => confirmDelete(e, pack.id)}
+                    title="Delete Pack"
+                    disabled={isDeleting}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="pack-title">{pack.title || 'Untitled Pack'}</div>
+                <div className="pack-category">{getCategoryName(pack.category)}</div>
+                <div className="pack-description">{pack.description || 'No description'}</div>
+                <div className="pack-meta">
+                  <div className={`difficulty difficulty-${(pack.difficulty || 'unknown').toLowerCase()}`}>
+                    {pack.difficulty || 'Unknown'}
+                  </div>
+                  {pack.time_given != null && <div className="time">{pack.time_given} min</div>}
+                  {pack.questions_count != null && <div className="questions-count">{pack.questions_count} questions</div>}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="no-results">
+              <p>{packs.length === 0 ? 'No question packs have been created yet.' : 'No question packs found matching your filters.'}</p>
+              {packs.length > 0 && (filters.category || filters.difficulty || filters.search) && (
+                <button onClick={resetFilters} disabled={isFiltering}>Clear Filters</button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {deleteConfirm.show && (
         <div className="delete-modal-overlay" onClick={cancelDelete}>
           <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Confirm Delete</h3>
             <p>Are you sure you want to delete this question pack? This action cannot be undone.</p>
+            {error && <p className="error">{error}</p>}
             <div className="delete-modal-actions">
-              <button className="cancel-btn" onClick={cancelDelete}>Cancel</button>
-              <button className="confirm-delete-btn" onClick={handleDelete}>Delete</button>
+              <button onClick={cancelDelete} disabled={isDeleting}>Cancel</button>
+              <button className="delete-btn" onClick={handleDelete} disabled={isDeleting}>
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
       <div className="add-new-container">
-        <button className="add-new-btn" onClick={() => navigateTo('add-question-pack')}>
+        <Link to="/website/add-question-pack" className="add-new-btn">
           + Add New Question Pack
-        </button>
+        </Link>
       </div>
     </div>
   );

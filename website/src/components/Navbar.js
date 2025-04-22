@@ -1,24 +1,35 @@
 import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './Navbar.css';
 
-function Navbar({ navigateTo }) {
+function Navbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/website/login');
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <a href="#" className="brand-link" onClick={(e) => { e.preventDefault(); navigateTo('home'); }}>
-          Quiz Management
-        </a>
+        <Link to="/website">TeksherMe</Link>
       </div>
       <div className="navbar-links">
-        <a href="#" className="nav-link" onClick={(e) => { e.preventDefault(); navigateTo('categories'); }}>
-          Category Manager
-        </a>
-        <a href="#" className="nav-link" onClick={(e) => { e.preventDefault(); navigateTo('question-packs'); }}>
-          Question Pack
-        </a>
-        <a href="#" className="nav-link" onClick={(e) => { e.preventDefault(); navigateTo('add-question-pack'); }}>
-          Add Question Pack
-        </a>
+        <Link to="/website">Home</Link>
+        <Link to="/website/categories">Categories</Link>
+        <Link to="/website/question-packs">Question Packs</Link>
+        <Link to="/website/add-question-pack">Add Question Pack</Link>
+      </div>
+      <div className="navbar-user">
+        {user && (
+          <>
+            <span>Welcome, {user.username}</span>
+            <button onClick={handleLogout}>Logout</button>
+          </>
+        )}
       </div>
     </nav>
   );

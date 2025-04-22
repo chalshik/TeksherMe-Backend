@@ -290,4 +290,22 @@
 .add-new-btn:hover {
   background-color: #27ae60;
   transform: translateY(-2px);
+}
+
+.filter-loading {
+  padding: 10px;
+  margin-top: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Add disabled styling for filter controls */
+.filters-panel input:disabled,
+.filters-panel select:disabled,
+.filter-controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 } 

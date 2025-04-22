@@ -12,7 +12,7 @@ class TestSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TestSet
-        fields = ['id', 'title', 'description', 'category', 'category_id', 'time_limit_minutes', 'difficulty', 'created_at']
+        fields = ['id', 'title', 'description', 'category', 'category_id', 'time_limit_minutes', 'difficulty', 'created_at', 'questions']
 
 class QuestionSerializer(serializers.ModelSerializer):
     testset = TestSetSerializer(read_only=True)
