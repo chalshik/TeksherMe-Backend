@@ -1,0 +1,25 @@
+# Python bytecode files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment and virtual env
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Editor files
+.idea/
+.vscode/
+
+# Database
+*.sqlite3
+
+# Node modules
+node_modules/
+
+# Build directories
+/build/
+/dist/
