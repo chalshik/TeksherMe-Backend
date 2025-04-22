@@ -112,7 +112,7 @@ ROOT_URLCONF = 'TeksherMe_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'website/build')],
+        'DIRS': [],  # Removed website/build
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
