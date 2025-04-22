@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-// Import but don't use apiClient for authentication
-import apiClient from '../services/api';
+import axios from 'axios';
+import { API_BASE_URL } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -9,12 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [initializing, setInitializing] = useState(true);
-
-  // Hardcoded credentials for use instead of API
-  const validCredentials = {
-    username: 'admin',
-    password: 'admin123'
-  };
 
   // Check for existing user session on initial load
   useEffect(() => {
@@ -36,28 +30,30 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Use real API login endpoint
+      const response = await axios.post(`${API_BASE_URL}/users/login/`, {
+        username,
+        password
+      });
       
-      // Use hardcoded credentials instead of API call
-      if (username === validCredentials.username && password === validCredentials.password) {
-        // Create a fake token and user data
+      if (response.data && response.data.token) {
+        // Create user data with token from API
         const userData = {
-          id: 1,
-          username: username,
-          name: 'Admin User',
-          token: 'fake-auth-token-' + Date.now() // Simulate a token
+          username,
+          token: response.data.token
         };
         
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
         return true;
       } else {
-        setError('Invalid username or password');
+        setError('Invalid response from server');
         return false;
       }
     } catch (err) {
-      const errorMessage = 'An error occurred during login';
+      console.error('Login error:', err);
+      const errorMessage = err.response?.data?.non_field_errors?.[0] || 
+                          'Invalid username or password';
       setError(errorMessage);
       return false;
     } finally {
@@ -68,8 +64,8 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      // No API call needed
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate delay
+      // No API call needed for token logout
+      await new Promise(resolve => setTimeout(resolve, 300)); // Small delay for UX
     } catch (err) {
       console.error('Error during logout', err);
     } finally {
