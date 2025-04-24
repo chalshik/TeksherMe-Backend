@@ -1,0 +1,185 @@
+/* General Styles */
+* {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #F9FAFB;
+  color: #1F2937;
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 30px;
+  margin-left: 250px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  font-size: 1.2rem;
+  color: #6B7280;
+}
+
+/* Card */
+.card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  margin-bottom: 30px;
+}
+
+.card-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #E5E7EB;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+/* Buttons */
+button, .btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+button:active, .btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background-color: #3B82F6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563EB;
+}
+
+.btn-secondary {
+  background-color: #F3F4F6;
+  color: #1F2937;
+}
+
+.btn-secondary:hover {
+  background-color: #E5E7EB;
+}
+
+.btn-edit {
+  background-color: #3B82F6;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #2563EB;
+}
+
+.btn-delete {
+  background-color: #EF4444;
+  color: white;
+  margin-left: 8px;
+}
+
+.btn-delete:hover {
+  background-color: #DC2626;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+th {
+  font-weight: 600;
+  color: #4B5563;
+  background-color: #F9FAFB;
+}
+
+tr:hover {
+  background-color: #F9FAFB;
+}
+
+/* Badge */
+.badge {
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.badge-easy {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+.badge-medium {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-hard {
+  background-color: #FEE2E2;
+  color: #B91C1C;
+}
+
+/* Empty text */
+.empty-text {
+  color: #6B7280;
+  text-align: center;
+  padding: 20px 0;
+} 
