@@ -1,8 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AdminPanel from './components/Admin/AdminPanel';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import QuestionPackEditor from './components/Admin/QuestionPackEditor';
-import Admin from './components/Admin/Admin'; // 👈 your component
+import Admin from './components/Admin/Admin';
+import Login from './components/Login/Login';
+import ProtectedRoute from './components/Login/ProtectedRoute';
 import './App.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -10,15 +11,45 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/admin/question-pack" element={<QuestionPackEditor />} />
-        <Route path="/admin/question-pack/:packId" element={<QuestionPackEditor />} />
-        <Route path="/admin/question-pack-editor" element={<QuestionPackEditor />} />
-        <Route path="/admin/question-pack-editor/:packId" element={<QuestionPackEditor />} />
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* Admin Routes - Protected */}
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <Admin />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/question-pack" element={
+          <ProtectedRoute>
+            <QuestionPackEditor />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/question-pack/:packId" element={
+          <ProtectedRoute>
+            <QuestionPackEditor />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/question-pack-editor" element={
+          <ProtectedRoute>
+            <QuestionPackEditor />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/question-pack-editor/:packId" element={
+          <ProtectedRoute>
+            <QuestionPackEditor />
+          </ProtectedRoute>
+        } />
         
         {/* Home route */}
-        <Route path="/" element={<Admin />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Admin />
+          </ProtectedRoute>
+        } />
+        
+        {/* Catch all - redirect to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );

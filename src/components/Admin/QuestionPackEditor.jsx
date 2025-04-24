@@ -1,11 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  loadCategories, 
-  getQuestionPack, 
-  saveQuestionPack, 
-  updateQuestionPack 
-} from '../../firebase/firestore';
+import { useCategories, useQuestionPacks } from '../../firebase/hooks';
 import './QuestionPackEditor.css';
 
 const QuestionPackEditor = () => {
@@ -24,7 +19,6 @@ const QuestionPackEditor = () => {
     categoryName: '',
     questions: []
   });
-  const [categories, setCategories] = useState([]);
   const [newQuestion, setNewQuestion] = useState({
     text: '',
     options: [
@@ -39,35 +33,37 @@ const QuestionPackEditor = () => {
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Load data when component mounts
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        // Load categories
-        const categoriesData = await loadCategories();
-        setCategories(categoriesData);
+  // Use our custom hooks instead of direct Firebase calls
+  const { categories, loading: categoriesLoading } = useCategories();
+  const { 
+    getQuestionPackById, 
+    addQuestionPack: saveQuestionPack, 
+    updateQuestionPackById: updateQuestionPack,
+    loading: questionPacksLoading 
+  } = useQuestionPacks();
 
-        // If editing, load question pack data
-        if (isEditing) {
-          const packData = await getQuestionPack(packId);
-          if (packData) {
-            setPackDetails(packData);
-          } else {
-            setError('Question pack not found');
-            navigate('/admin');
-          }
-        }
-      } catch (err) {
-        setError('Error loading data: ' + err.message);
-      } finally {
-        setIsLoading(false);
+  // Combined loading state
+  const isLoading = categoriesLoading || questionPacksLoading;
+
+  const fetchPackData = useCallback(async () => {
+    if (!isEditing || !packId) return;
+    
+    try {
+      const packData = await getQuestionPackById(packId);
+      if (packData) {
+        setPackDetails(packData);
+      } else {
+        setError('Question pack not found');
+        navigate('/admin');
       }
-    };
+    } catch (err) {
+      setError('Error loading data: ' + err.message);
+    }
+  }, [packId, isEditing, navigate, getQuestionPackById]);
 
-    fetchData();
+  useEffect(() => {
+    fetchPackData();
   }, [packId, isEditing, navigate]);
 
   // Handle pack details changes
@@ -346,28 +342,40 @@ const QuestionPackEditor = () => {
     }
     
     try {
-      setIsLoading(true);
+      console.log("Saving pack with questions:", packDetails.questions);
+      
+      // Ensure questions have valid format for Firebase
+      const formattedQuestions = packDetails.questions.map(q => ({
+        text: q.text,
+        options: q.options.map(o => ({
+          text: o.text,
+          isCorrect: o.isCorrect
+        }))
+      }));
+      
+      const packDataToSave = {
+        ...packDetails,
+        questions: formattedQuestions
+      };
+      
+      console.log("Formatted packDetails for Firebase:", packDataToSave);
       
       // Create or update question pack
-      let result;
       if (isEditing) {
-        result = await updateQuestionPack(packDetails);
+        await updateQuestionPack(packId, packDataToSave);
+        setSuccess('Question pack updated successfully');
       } else {
-        result = await saveQuestionPack(packDetails);
+        await saveQuestionPack(packDataToSave);
+        setSuccess('Question pack created successfully');
       }
       
-      if (result) {
-        setSuccess('Question pack saved successfully');
-        setTimeout(() => {
-          navigate('/admin');
-        }, 1500);
-      } else {
-        setError('Error saving question pack');
-      }
+      // Navigate back to admin after a short delay
+      setTimeout(() => {
+        navigate('/admin');
+      }, 1500);
     } catch (err) {
+      console.error("Error saving question pack:", err);
       setError('Error saving question pack: ' + err.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 

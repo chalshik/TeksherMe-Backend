@@ -1,4 +1,19 @@
-import { getFirestore, collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore";
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  getDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  query, 
+  where,
+  setDoc,
+  serverTimestamp,
+  orderBy,
+  increment
+} from "firebase/firestore";
 import { app } from "./config.js";
 
 // Initialize Firestore
@@ -6,7 +21,7 @@ const db = getFirestore(app);
 
 // Collection references
 const categoriesRef = collection(db, "categories");
-const questionPacksRef = collection(db, "questionPacks");
+const questionPacksRef = collection(db, "question_packs");
 
 /**
  * Load all categories with pack counts
@@ -14,10 +29,10 @@ const questionPacksRef = collection(db, "questionPacks");
 export async function loadCategories() {
   try {
     const categoriesSnapshot = await getDocs(categoriesRef);
-    const packsSnapshot = await getDocs(questionPacksRef);
-    
-    // Create a map of category ids to pack counts
     const packCountMap = {};
+    
+    // Query each pack to count by category
+    const packsSnapshot = await getDocs(questionPacksRef);
     packsSnapshot.forEach(packDoc => {
       const packData = packDoc.data();
       if (packData.categoryId) {
@@ -34,6 +49,7 @@ export async function loadCategories() {
       return {
         id: doc.id,
         name: data.name,
+        packCount: packCountMap[doc.id] || 0, // Use packCount for backward compatibility
         questionPackCount: packCountMap[doc.id] || 0
       };
     });
@@ -67,12 +83,14 @@ export async function getAllCategories() {
 export async function saveNewCategory(name) {
   try {
     const docRef = await addDoc(categoriesRef, {
-      name: name
+      name: name,
+      createdAt: serverTimestamp()
     });
     
     return {
       id: docRef.id,
       name: name,
+      packCount: 0,
       questionPackCount: 0
     };
   } catch (error) {
@@ -87,6 +105,15 @@ export async function saveNewCategory(name) {
 export async function updateCategory(categoryId, updatedData) {
   try {
     const categoryRef = doc(db, "categories", categoryId);
+    
+    if (typeof updatedData === 'string') {
+      // If just a string is passed, assume it's the name
+      updatedData = { name: updatedData };
+    }
+    
+    // Add timestamp
+    updatedData.updatedAt = serverTimestamp();
+    
     await updateDoc(categoryRef, updatedData);
     
     // If we're updating the name, we need to update all question packs that use this category
@@ -97,7 +124,7 @@ export async function updateCategory(categoryId, updatedData) {
       
       // Update each pack with the new category name
       const updatePromises = packsSnapshot.docs.map(packDoc => {
-        const packRef = doc(db, "questionPacks", packDoc.id);
+        const packRef = doc(db, "question_packs", packDoc.id);
         return updateDoc(packRef, { categoryName: updatedData.name });
       });
       
@@ -138,8 +165,7 @@ export async function deleteCategory(categoryId) {
     
     // Delete each pack
     const deletePromises = packsSnapshot.docs.map(packDoc => {
-      const packRef = doc(db, "questionPacks", packDoc.id);
-      return deleteDoc(packRef);
+      return deleteQuestionPack(packDoc.id);
     });
     
     // Wait for all packs to be deleted
@@ -162,20 +188,31 @@ export async function deleteCategory(categoryId) {
 export async function loadQuestionPacks() {
   try {
     const packsSnapshot = await getDocs(questionPacksRef);
+    const packsList = [];
     
-    return packsSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        name: data.name,
-        description: data.description,
-        time: data.time,
-        difficulty: data.difficulty,
-        categoryId: data.categoryId,
-        categoryName: data.categoryName,
-        questionCount: data.questions ? data.questions.length : 0
-      };
-    });
+    for (const packDoc of packsSnapshot.docs) {
+      const packData = packDoc.data();
+      const packId = packDoc.id;
+      
+      // Count questions in the subcollection
+      const questionsRef = collection(db, "question_packs", packId, "questions");
+      const questionsSnapshot = await getDocs(questionsRef);
+      const questionCount = questionsSnapshot.size;
+      
+      packsList.push({
+        id: packId,
+        name: packData.name || '',
+        description: packData.description || '',
+        time: packData.time || 10,
+        difficulty: packData.difficulty || 'easy',
+        categoryId: packData.categoryId || '',
+        categoryName: packData.categoryName || '',
+        questionCount: questionCount,
+        questions: [] // Include empty array for compatibility
+      });
+    }
+    
+    return packsList;
   } catch (error) {
     console.error("Error loading question packs:", error);
     throw error;
@@ -183,27 +220,68 @@ export async function loadQuestionPacks() {
 }
 
 /**
- * Get a question pack by ID
+ * Get a question pack by ID with all questions and options
  */
 export async function getQuestionPack(packId) {
   try {
-    const packRef = doc(db, "questionPacks", packId);
+    const packRef = doc(db, "question_packs", packId);
     const packSnapshot = await getDoc(packRef);
     
     if (!packSnapshot.exists()) {
       return null;
     }
     
-    const data = packSnapshot.data();
+    const packData = packSnapshot.data();
+    
+    // Get all questions for this pack
+    const questionsRef = collection(db, "question_packs", packId, "questions");
+    const questionsQuery = query(questionsRef, orderBy("order", "asc"));
+    const questionsSnapshot = await getDocs(questionsQuery);
+    
+    const questions = [];
+    
+    // For each question, get its options
+    for (const questionDoc of questionsSnapshot.docs) {
+      const questionData = questionDoc.data();
+      const questionId = questionDoc.id;
+      
+      // Get options for this question
+      const optionsRef = collection(
+        db, 
+        "question_packs", 
+        packId, 
+        "questions", 
+        questionId, 
+        "options"
+      );
+      const optionsQuery = query(optionsRef, orderBy("order", "asc"));
+      const optionsSnapshot = await getDocs(optionsQuery);
+      
+      const options = optionsSnapshot.docs.map(optionDoc => {
+        const optionData = optionDoc.data();
+        return {
+          id: optionDoc.id,
+          text: optionData.text || '',
+          isCorrect: Boolean(optionData.isCorrect)
+        };
+      });
+      
+      questions.push({
+        id: questionId,
+        text: questionData.text || '',
+        options: options
+      });
+    }
+    
     return {
       id: packSnapshot.id,
-      name: data.name,
-      description: data.description,
-      time: data.time,
-      difficulty: data.difficulty,
-      categoryId: data.categoryId,
-      categoryName: data.categoryName,
-      questions: data.questions || []
+      name: packData.name || '',
+      description: packData.description || '',
+      time: packData.time || 10,
+      difficulty: packData.difficulty || 'easy',
+      categoryId: packData.categoryId || '',
+      categoryName: packData.categoryName || '',
+      questions: questions
     };
   } catch (error) {
     console.error("Error getting question pack:", error);
@@ -216,12 +294,48 @@ export async function getQuestionPack(packId) {
  */
 export async function updateQuestionPack(packId, updatedData) {
   try {
-    const packRef = doc(db, "questionPacks", packId);
-    await updateDoc(packRef, updatedData);
+    const packRef = doc(db, "question_packs", packId);
+    
+    // Extract questions from updatedData before updating the pack document
+    const questions = updatedData.questions || [];
+    
+    // Clone updatedData without the questions field
+    const packDataToUpdate = {...updatedData};
+    delete packDataToUpdate.questions;
+    
+    // Add updatedAt timestamp
+    packDataToUpdate.updatedAt = serverTimestamp();
+    
+    // Sanitize the data
+    const sanitizedData = {};
+    
+    if (packDataToUpdate.name !== undefined) sanitizedData.name = String(packDataToUpdate.name);
+    if (packDataToUpdate.description !== undefined) sanitizedData.description = String(packDataToUpdate.description);
+    if (packDataToUpdate.time !== undefined) sanitizedData.time = Number(packDataToUpdate.time) || 10;
+    if (packDataToUpdate.difficulty !== undefined) sanitizedData.difficulty = String(packDataToUpdate.difficulty);
+    if (packDataToUpdate.categoryId !== undefined) sanitizedData.categoryId = String(packDataToUpdate.categoryId);
+    if (packDataToUpdate.categoryName !== undefined) sanitizedData.categoryName = String(packDataToUpdate.categoryName);
+    if (packDataToUpdate.updatedAt !== undefined) sanitizedData.updatedAt = packDataToUpdate.updatedAt;
+    
+    // Update the pack document
+    await updateDoc(packRef, sanitizedData);
+    
+    // If there are questions to update
+    if (Array.isArray(questions) && questions.length > 0) {
+      // Delete all existing questions and their options first
+      await deleteAllQuestionsInPack(packId);
+      
+      // Add the new questions
+      for (let i = 0; i < questions.length; i++) {
+        const question = questions[i];
+        await addQuestionToPack(packId, question, i);
+      }
+    }
     
     return {
       id: packId,
-      ...updatedData
+      ...sanitizedData,
+      questions: questions
     };
   } catch (error) {
     console.error("Error updating question pack:", error);
@@ -230,11 +344,61 @@ export async function updateQuestionPack(packId, updatedData) {
 }
 
 /**
- * Delete a question pack
+ * Delete all questions in a pack
+ */
+async function deleteAllQuestionsInPack(packId) {
+  try {
+    const questionsRef = collection(db, "question_packs", packId, "questions");
+    const questionsSnapshot = await getDocs(questionsRef);
+    
+    // Delete each question and its options
+    for (const questionDoc of questionsSnapshot.docs) {
+      const questionId = questionDoc.id;
+      
+      // Delete all options for this question
+      const optionsRef = collection(
+        db, 
+        "question_packs", 
+        packId, 
+        "questions", 
+        questionId, 
+        "options"
+      );
+      const optionsSnapshot = await getDocs(optionsRef);
+      
+      for (const optionDoc of optionsSnapshot.docs) {
+        await deleteDoc(doc(
+          db, 
+          "question_packs", 
+          packId, 
+          "questions", 
+          questionId, 
+          "options", 
+          optionDoc.id
+        ));
+      }
+      
+      // Delete the question
+      await deleteDoc(doc(db, "question_packs", packId, "questions", questionId));
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting all questions in pack:", error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a question pack and all its questions and options
  */
 export async function deleteQuestionPack(packId) {
   try {
-    const packRef = doc(db, "questionPacks", packId);
+    // First delete all questions and options
+    await deleteAllQuestionsInPack(packId);
+    
+    // Then delete the pack itself
+    const packRef = doc(db, "question_packs", packId);
     await deleteDoc(packRef);
     
     return { success: true };
@@ -249,11 +413,45 @@ export async function deleteQuestionPack(packId) {
  */
 export async function saveQuestionPack(packData) {
   try {
-    const docRef = await addDoc(questionPacksRef, packData);
+    // Extract questions from packData
+    const questions = packData.questions || [];
+    
+    // Clone packData without the questions field
+    const packDataToSave = {...packData};
+    delete packDataToSave.questions;
+    
+    // Add timestamps
+    packDataToSave.createdAt = serverTimestamp();
+    packDataToSave.updatedAt = serverTimestamp();
+    
+    // Sanitize pack data
+    const sanitizedData = {
+      name: packDataToSave.name || '',
+      description: packDataToSave.description || '',
+      time: Number(packDataToSave.time) || 10,
+      difficulty: packDataToSave.difficulty || 'easy',
+      categoryId: packDataToSave.categoryId || '',
+      categoryName: packDataToSave.categoryName || '',
+      createdAt: packDataToSave.createdAt,
+      updatedAt: packDataToSave.updatedAt
+    };
+    
+    // Create the question pack document
+    const docRef = await addDoc(questionPacksRef, sanitizedData);
+    const packId = docRef.id;
+    
+    // Add questions as subcollection documents
+    if (Array.isArray(questions) && questions.length > 0) {
+      for (let i = 0; i < questions.length; i++) {
+        const question = questions[i];
+        await addQuestionToPack(packId, question, i);
+      }
+    }
     
     return {
-      id: docRef.id,
-      ...packData
+      id: packId,
+      ...sanitizedData,
+      questions: questions
     };
   } catch (error) {
     console.error("Error saving question pack:", error);
@@ -264,22 +462,60 @@ export async function saveQuestionPack(packData) {
 /**
  * Add a question to a pack
  */
-export async function addQuestionToPack(packId, question) {
+export async function addQuestionToPack(packId, question, order = 0) {
   try {
-    const pack = await getQuestionPack(packId);
+    const questionsRef = collection(db, "question_packs", packId, "questions");
     
-    if (!pack) {
-      throw new Error("Question pack not found");
+    // Sanitize question data
+    const sanitizedQuestion = {
+      text: question.text || '',
+      order: order,
+      createdAt: serverTimestamp()
+    };
+    
+    // Create the question document
+    const questionDocRef = await addDoc(questionsRef, sanitizedQuestion);
+    const questionId = questionDocRef.id;
+    
+    // Add options as subcollection documents
+    if (Array.isArray(question.options) && question.options.length > 0) {
+      const optionsRef = collection(
+        db, 
+        "question_packs", 
+        packId, 
+        "questions", 
+        questionId, 
+        "options"
+      );
+      
+      for (let i = 0; i < question.options.length; i++) {
+        const option = question.options[i];
+        
+        // Skip empty options
+        if (!option.text.trim()) continue;
+        
+        // Sanitize option data
+        const sanitizedOption = {
+          text: option.text || '',
+          isCorrect: Boolean(option.isCorrect),
+          order: i,
+          createdAt: serverTimestamp()
+        };
+        
+        await addDoc(optionsRef, sanitizedOption);
+      }
     }
     
-    const questions = pack.questions || [];
-    questions.push(question);
-    
-    await updateQuestionPack(packId, { questions });
+    // Update question count in the pack document
+    const packRef = doc(db, "question_packs", packId);
+    await updateDoc(packRef, {
+      questionCount: increment(1)
+    });
     
     return {
-      id: packId,
-      questions
+      id: questionId,
+      text: sanitizedQuestion.text,
+      options: question.options || []
     };
   } catch (error) {
     console.error("Error adding question to pack:", error);
@@ -288,59 +524,203 @@ export async function addQuestionToPack(packId, question) {
 }
 
 /**
- * Update a question in a pack
+ * Get all questions from a pack
  */
-export async function updateQuestionInPack(packId, questionIndex, updatedQuestion) {
+export const getPackQuestions = async (packId) => {
   try {
-    const pack = await getQuestionPack(packId);
+    const questionsRef = collection(db, "question_packs", packId, "questions");
+    const questionsQuery = query(questionsRef, orderBy("order", "asc"));
+    const questionsSnapshot = await getDocs(questionsQuery);
     
-    if (!pack) {
-      throw new Error("Question pack not found");
+    const questions = [];
+    
+    for (const questionDoc of questionsSnapshot.docs) {
+      const questionData = questionDoc.data();
+      const questionId = questionDoc.id;
+      
+      // Get options for this question
+      const optionsRef = collection(
+        db, 
+        "question_packs", 
+        packId, 
+        "questions", 
+        questionId, 
+        "options"
+      );
+      const optionsQuery = query(optionsRef, orderBy("order", "asc"));
+      const optionsSnapshot = await getDocs(optionsQuery);
+      
+      const options = optionsSnapshot.docs.map(optionDoc => {
+        const optionData = optionDoc.data();
+        return {
+          id: optionDoc.id,
+          text: optionData.text || '',
+          isCorrect: Boolean(optionData.isCorrect)
+        };
+      });
+      
+      questions.push({
+        id: questionId,
+        text: questionData.text || '',
+        options: options
+      });
     }
     
-    if (!pack.questions || questionIndex >= pack.questions.length) {
-      throw new Error("Question not found");
-    }
-    
-    pack.questions[questionIndex] = updatedQuestion;
-    
-    await updateQuestionPack(packId, { questions: pack.questions });
-    
-    return {
-      id: packId,
-      questions: pack.questions
-    };
+    return questions;
   } catch (error) {
-    console.error("Error updating question in pack:", error);
+    console.error('Error getting pack questions:', error);
     throw error;
   }
-}
+};
+
+/**
+ * Update a question in a pack
+ */
+export const updatePackQuestion = async (packId, questionId, updatedQuestion) => {
+  try {
+    if (!questionId) {
+      // If no questionId provided, add as a new question
+      const questionsRef = collection(db, "question_packs", packId, "questions");
+      const questionsSnapshot = await getDocs(questionsRef);
+      const nextOrder = questionsSnapshot.size;
+      
+      return await addQuestionToPack(packId, updatedQuestion, nextOrder);
+    }
+    
+    const questionRef = doc(db, "question_packs", packId, "questions", questionId);
+    const questionSnapshot = await getDoc(questionRef);
+    
+    if (!questionSnapshot.exists()) {
+      throw new Error('Question not found');
+    }
+    
+    // Update question text
+    await updateDoc(questionRef, {
+      text: updatedQuestion.text || '',
+      updatedAt: serverTimestamp()
+    });
+    
+    // Delete existing options
+    const optionsRef = collection(
+      db, 
+      "question_packs", 
+      packId, 
+      "questions", 
+      questionId, 
+      "options"
+    );
+    const optionsSnapshot = await getDocs(optionsRef);
+    
+    for (const optionDoc of optionsSnapshot.docs) {
+      await deleteDoc(doc(
+        db, 
+        "question_packs", 
+        packId, 
+        "questions", 
+        questionId, 
+        "options", 
+        optionDoc.id
+      ));
+    }
+    
+    // Add new options
+    if (Array.isArray(updatedQuestion.options)) {
+      for (let i = 0; i < updatedQuestion.options.length; i++) {
+        const option = updatedQuestion.options[i];
+        const newOptionsRef = collection(
+          db, 
+          "question_packs", 
+          packId, 
+          "questions", 
+          questionId, 
+          "options"
+        );
+        
+        await addDoc(newOptionsRef, {
+          text: option.text || '',
+          isCorrect: Boolean(option.isCorrect),
+          order: i,
+          updatedAt: serverTimestamp()
+        });
+      }
+    }
+    
+    // Return updated question with options
+    return {
+      id: questionId,
+      text: updatedQuestion.text || '',
+      options: updatedQuestion.options || []
+    };
+  } catch (error) {
+    console.error('Error updating pack question:', error);
+    throw error;
+  }
+};
 
 /**
  * Delete a question from a pack
  */
-export async function deleteQuestionFromPack(packId, questionIndex) {
+export const deletePackQuestion = async (packId, questionId) => {
   try {
-    const pack = await getQuestionPack(packId);
-    
-    if (!pack) {
-      throw new Error("Question pack not found");
+    if (!questionId) {
+      throw new Error('Question ID is required');
     }
     
-    if (!pack.questions || questionIndex >= pack.questions.length) {
-      throw new Error("Question not found");
+    const questionRef = doc(db, "question_packs", packId, "questions", questionId);
+    const questionSnapshot = await getDoc(questionRef);
+    
+    if (!questionSnapshot.exists()) {
+      throw new Error('Question not found');
     }
     
-    pack.questions.splice(questionIndex, 1);
+    // Delete all options for this question
+    const optionsRef = collection(
+      db, 
+      "question_packs", 
+      packId, 
+      "questions", 
+      questionId, 
+      "options"
+    );
+    const optionsSnapshot = await getDocs(optionsRef);
     
-    await updateQuestionPack(packId, { questions: pack.questions });
+    for (const optionDoc of optionsSnapshot.docs) {
+      await deleteDoc(doc(
+        db, 
+        "question_packs", 
+        packId, 
+        "questions", 
+        questionId, 
+        "options", 
+        optionDoc.id
+      ));
+    }
     
-    return {
-      id: packId,
-      questions: pack.questions
-    };
+    // Delete the question
+    await deleteDoc(questionRef);
+    
+    // Reorder remaining questions
+    const questionsRef = collection(db, "question_packs", packId, "questions");
+    const questionsQuery = query(questionsRef, orderBy("order", "asc"));
+    const remainingQuestionsSnapshot = await getDocs(questionsQuery);
+    
+    let i = 0;
+    for (const questionDoc of remainingQuestionsSnapshot.docs) {
+      await updateDoc(doc(db, "question_packs", packId, "questions", questionDoc.id), {
+        order: i++
+      });
+    }
+    await deleteDoc(questionRef);
+    
+   // Update question count in the pack document
+    const packRef = doc(db, "question_packs", packId);
+    await updateDoc(packRef, {
+      questionCount: increment(-1)   
+    });
+    
+    return { success: true };
   } catch (error) {
-    console.error("Error deleting question from pack:", error);
+    console.error('Error deleting pack question:', error);
     throw error;
   }
-}
+}; 
