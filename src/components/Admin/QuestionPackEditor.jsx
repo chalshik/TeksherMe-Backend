@@ -429,317 +429,361 @@ const QuestionPackEditor = () => {
   };
 
   return (
-    <div className="question-pack-editor">
+    <div className="editor-container">
       <div className="editor-header">
-        <div className="container">
-          <h1>{isEditing ? 'Edit Question Pack' : 'Create New Question Pack'}</h1>
-          <div className="editor-actions">
-            <button className="btn btn-secondary" onClick={handleCancel}>
-              <i className="fas fa-times"></i> Cancel
-            </button>
-            <button className="btn btn-primary" onClick={handleSavePack} disabled={isLoading}>
-              <i className="fas fa-save"></i> Save Pack
-            </button>
-          </div>
+        <h1 className="editor-title">{isEditing ? 'Edit Question Pack' : 'Create Question Pack'}</h1>
+        <div className="btn-group">
+          <button className="btn btn-secondary" onClick={handleCancel}>
+            <i className="fas fa-arrow-left"></i> Back
+          </button>
+          <button 
+            className="btn btn-primary" 
+            onClick={handleSavePack}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <i className="fas fa-circle-notch fa-spin"></i> Saving...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-save"></i> Save Pack
+              </>
+            )}
+          </button>
         </div>
       </div>
-
-      <div className="container">
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+      
+      {error && <div className="alert alert-danger">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
+      
+      {/* Pack Details Section */}
+      <div className="editor-card">
+        <h2 className="editor-card-title">Pack Details</h2>
         
-        {isLoading ? (
-          <div className="loading-container">
-            <div className="loading-spinner">Loading...</div>
-          </div>
-        ) : (
-          <>
-            {/* Pack Details Section */}
-            <div className="card pack-details">
-              <div className="card-header">
-                <h2>Pack Details</h2>
-              </div>
-              <div className="card-body">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="required-label">Pack Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="name"
-                      value={packDetails.name}
-                      onChange={handlePackDetailChange}
-                      placeholder="Enter pack name"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label className="required-label">Category</label>
-                    <select
-                      className="form-control"
-                      name="categoryId"
-                      value={packDetails.categoryId}
-                      onChange={handlePackDetailChange}
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map(category => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Description</label>
-                    <textarea
-                      className="form-control"
-                      name="description"
-                      value={packDetails.description}
-                      onChange={handlePackDetailChange}
-                      placeholder="Enter pack description"
-                      rows="3"
-                    ></textarea>
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Time Limit (minutes)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="time"
-                      value={packDetails.time}
-                      onChange={handlePackDetailChange}
-                      min="1"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Difficulty</label>
-                    <select
-                      className="form-control"
-                      name="difficulty"
-                      value={packDetails.difficulty}
-                      onChange={handlePackDetailChange}
-                    >
-                      <option value="easy">Easy</option>
-                      <option value="medium">Medium</option>
-                      <option value="hard">Hard</option>
-                    </select>
-                  </div>
-                </div>
+        <form>
+          <div className="form-row">
+            <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="name" className="required-label">Pack Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  className="form-control"
+                  value={packDetails.name}
+                  onChange={handlePackDetailChange}
+                  required
+                  placeholder="Enter pack name"
+                />
               </div>
             </div>
-
-            {/* Add New Question Section */}
-            <div className="card add-question">
-              <div className="card-header">
-                <h2>Add New Question</h2>
+            
+            <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="categoryId" className="required-label">Category</label>
+                <select
+                  id="categoryId"
+                  name="categoryId"
+                  className="form-control"
+                  value={packDetails.categoryId}
+                  onChange={handlePackDetailChange}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="card-body">
-                <form onSubmit={handleAddQuestion}>
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="difficulty">Difficulty Level</label>
+                <select
+                  id="difficulty"
+                  name="difficulty"
+                  className="form-control"
+                  value={packDetails.difficulty}
+                  onChange={handlePackDetailChange}
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="time">Time Limit (minutes)</label>
+                <input
+                  type="number"
+                  id="time"
+                  name="time"
+                  className="form-control"
+                  value={packDetails.time}
+                  onChange={handlePackDetailChange}
+                  min="1"
+                  max="180"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              className="form-control"
+              value={packDetails.description}
+              onChange={handlePackDetailChange}
+              placeholder="Enter pack description"
+              rows="3"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+      
+      {/* Add Question Section */}
+      <div className="editor-card">
+        <h2 className="editor-card-title">Add New Question</h2>
+        
+        <form onSubmit={handleAddQuestion}>
+          <div className="form-group">
+            <label htmlFor="question-text" className="required-label">Question</label>
+            <textarea
+              id="question-text"
+              className="form-control"
+              value={newQuestion.text}
+              onChange={handleNewQuestionChange}
+              required
+              placeholder="Enter your question here"
+            ></textarea>
+          </div>
+          
+          <h3>Options</h3>
+          
+          {newQuestion.options.map((option, index) => (
+            <div key={index} className="option-form-item">
+              <div className="option-radio">
+                <input
+                  type="radio"
+                  id={`option-${index}`}
+                  name="correctOption"
+                  checked={option.isCorrect}
+                  onChange={() => handleCorrectOptionChange(index)}
+                />
+              </div>
+              
+              <div className="option-form-control">
+                <input
+                  type="text"
+                  className="form-control"
+                  value={option.text}
+                  onChange={(e) => handleOptionChange(index, e)}
+                  placeholder={`Option ${index + 1}`}
+                  required={index < 2}
+                />
+              </div>
+              
+              {option.isCorrect && (
+                <span className="correct-label">
+                  <i className="fas fa-check-circle"></i> Correct
+                </span>
+              )}
+              
+              {index > 1 && (
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm"
+                  onClick={() => handleRemoveOption(index)}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              )}
+            </div>
+          ))}
+          
+          <div className="form-group">
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={handleAddOption}
+            >
+              <i className="fas fa-plus"></i> Add Option
+            </button>
+          </div>
+          
+          <div className="form-group">
+            <button type="submit" className="btn btn-success">
+              <i className="fas fa-plus-circle"></i> Add Question
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      {/* Questions List */}
+      <div className="editor-card">
+        <h2 className="editor-card-title">Questions ({packDetails.questions.length})</h2>
+        
+        {packDetails.questions.length === 0 ? (
+          <div className="text-center">
+            <p>No questions added yet. Use the form above to add questions.</p>
+          </div>
+        ) : (
+          <div className="questions-list">
+            {packDetails.questions.map((question, index) => (
+              <div key={question.id} className="question-item">
+                <div className="question-header">
+                  <div className="question-number">Question {index + 1}</div>
+                  <div className="question-actions">
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        setEditingQuestionIndex(index);
+                        setEditingQuestion({...question});
+                        setShowModal(true);
+                      }}
+                    >
+                      <i className="fas fa-edit"></i> Edit
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDeleteQuestion(index)}
+                    >
+                      <i className="fas fa-trash-alt"></i> Delete
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="question-text">{question.text}</div>
+                
+                <div className="options-list">
+                  {question.options.map((option, optionIndex) => (
+                    <div
+                      key={optionIndex}
+                      className={`option-item ${option.isCorrect ? 'correct' : ''}`}
+                    >
+                      <div className="option-indicator">
+                        {option.isCorrect ? <i className="fas fa-check"></i> : optionIndex + 1}
+                      </div>
+                      <div className="option-text">{option.text}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Edit Question Modal */}
+      {showModal && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Edit Question</h3>
+              <button className="close-button" onClick={handleCloseModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              {editingQuestion && (
+                <>
                   <div className="form-group">
-                    <label className="required-label">Question</label>
+                    <label htmlFor="edit-question-text" className="required-label">Question</label>
                     <textarea
+                      id="edit-question-text"
                       className="form-control"
-                      value={newQuestion.text}
-                      onChange={handleNewQuestionChange}
-                      placeholder="Enter question text"
-                      rows="2"
+                      value={editingQuestion.text}
+                      onChange={handleEditQuestionChange}
+                      required
                     ></textarea>
                   </div>
                   
-                  <div className="options-container">
-                    <label className="required-label">Options (minimum 2)</label>
-                    
-                    {newQuestion.options.map((option, index) => (
-                      <div className="option-row" key={index}>
-                        <div className="option-input">
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={option.text}
-                            onChange={(e) => handleOptionChange(index, e)}
-                            placeholder={`Option ${index + 1}`}
-                          />
-                        </div>
-                        <div className="option-correct">
-                          <label className="option-label">
-                            <input
-                              type="radio"
-                              name="correctOption"
-                              checked={option.isCorrect}
-                              onChange={() => handleCorrectOptionChange(index)}
-                            />
-                            <span className={`correct-toggle ${option.isCorrect ? 'correct-toggle-active' : ''}`}>
-                              <i className="fas fa-check"></i> Correct
-                            </span>
-                          </label>
-                        </div>
-                        {/* Add the remove button here */}
-                        {newQuestion.options.length > 2 && (
-                          <button 
-                            type="button"
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleRemoveOption(index)}
-                          >
-                            <i className="fas fa-times"></i>
-                          </button>
-                        )}
+                  <h3>Options</h3>
+                  
+                  {editingQuestion.options.map((option, index) => (
+                    <div key={index} className="option-form-item">
+                      <div className="option-radio">
+                        <input
+                          type="radio"
+                          id={`edit-option-${index}`}
+                          name="editCorrectOption"
+                          checked={option.isCorrect}
+                          onChange={() => handleEditCorrectOptionChange(index)}
+                        />
                       </div>
-                    ))}
-                    
-                    <button 
-                      type="button" 
-                      className="btn btn-secondary btn-sm add-option-btn" 
-                      onClick={handleAddOption}
+                      
+                      <div className="option-form-control">
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={option.text}
+                          onChange={(e) => handleEditOptionChange(index, e)}
+                          placeholder={`Option ${index + 1}`}
+                          required={index < 2}
+                        />
+                      </div>
+                      
+                      {option.isCorrect && (
+                        <span className="correct-label">
+                          <i className="fas fa-check-circle"></i> Correct
+                        </span>
+                      )}
+                      
+                      {index > 1 && (
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleRemoveEditOption(index)}
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  
+                  <div className="form-group">
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary"
+                      onClick={handleAddEditOption}
                     >
                       <i className="fas fa-plus"></i> Add Option
                     </button>
                   </div>
-                  
-                  <button type="submit" className="btn btn-primary">
-                    <i className="fas fa-plus"></i> Add Question
-                  </button>
-                </form>
-              </div>
+                </>
+              )}
             </div>
-
-            {/* Questions List Section */}
-            <div className="card questions-list">
-              <div className="card-header">
-                <h2>Questions ({packDetails.questions.length})</h2>
-              </div>
-              <div className="card-body">
-                {packDetails.questions.length === 0 ? (
-                  <div className="empty-state">
-                    No questions added yet. Use the form above to add questions.
-                  </div>
-                ) : (
-                  <div className="questions-container">
-                    {packDetails.questions.map((question, index) => (
-                      <div className="question-item" key={question.id || index}>
-                        <div className="question-content">
-                          <div className="question-number">Q{index + 1}</div>
-                          <div className="question-text">{question.text}</div>
-                        </div>
-                        <div className="question-options">
-                          {question.options.map((option, optIndex) => (
-                            <div 
-                              className={`question-option ${option.isCorrect ? 'correct' : ''}`}
-                              key={optIndex}
-                            >
-                              {option.text}
-                              {option.isCorrect && <span className="correct-badge">Correct</span>}
-                            </div>
-                          ))}
-                        </div>
-                        <div className="question-actions">
-                          <button 
-                            className="btn btn-secondary btn-sm" 
-                            onClick={() => handleEditQuestion(index)}
-                          >
-                            <i className="fas fa-edit"></i> Edit
-                          </button>
-                          <button 
-                            className="btn btn-danger btn-sm" 
-                            onClick={() => handleDeleteQuestion(index)}
-                          >
-                            <i className="fas fa-trash"></i> Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Edit Question Modal */}
-      {showModal && editingQuestion && (
-        <div className="modal" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Edit Question</h3>
-              <button className="modal-close" onClick={handleCloseModal}>&times;</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label className="required-label">Question</label>
-                <textarea
-                  className="form-control"
-                  value={editingQuestion.text}
-                  onChange={handleEditQuestionChange}
-                  placeholder="Enter question text"
-                  rows="2"
-                ></textarea>
-              </div>
-              
-              <div className="options-container">
-                <label className="required-label">Options (minimum 2)</label>
-                
-                {editingQuestion.options.map((option, index) => (
-                <div className="option-row" key={index}>
-                  <div className="option-input">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={option.text}
-                      onChange={(e) => handleEditOptionChange(index, e)}
-                      placeholder={`Option ${index + 1}`}
-                    />
-                  </div>
-                  <div className="option-correct">
-                    <label className="option-label">
-                      <input
-                        type="radio"
-                        name="editCorrectOption"
-                        checked={option.isCorrect}
-                        onChange={() => handleEditCorrectOptionChange(index)}
-                      />
-                      <span className={`correct-toggle ${option.isCorrect ? 'correct-toggle-active' : ''}`}>
-                        <i className="fas fa-check"></i> Correct
-                      </span>
-                    </label>
-                  </div>
-                  {/* Add the remove button here */}
-                  {editingQuestion.options.length > 2 && (
-                    <button 
-                      type="button"
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleRemoveEditOption(index)}
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  )}
-                </div>
-              ))}
-                
-                <button 
-                  type="button" 
-                  className="btn btn-secondary btn-sm add-option-btn" 
-                  onClick={handleAddEditOption}
-                >
-                  <i className="fas fa-plus"></i> Add Option
-                </button>
-              </div>
-            </div>
+            
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={handleCloseModal}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleSaveEditedQuestion}>Save Changes</button>
+              <button
+                className="btn btn-secondary"
+                onClick={handleCloseModal}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleSaveEditedQuestion}
+              >
+                Update Question
+              </button>
             </div>
           </div>
         </div>
       )}
     </div>
   );
-};
+}
 
 export default QuestionPackEditor; 

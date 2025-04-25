@@ -193,7 +193,7 @@ const Admin = () => {
         <div className="section-header">
           <h2>Categories</h2>
           <button className="btn btn-primary" onClick={openAddCategoryModal}>
-            <i className="fa fa-plus"></i> Add Category
+            <i className="fas fa-plus"></i> Add Category
           </button>
         </div>
         
@@ -205,35 +205,42 @@ const Admin = () => {
               <tr>
                 <th>Name</th>
                 <th>Question Packs</th>
-                <th className="text-center">Actions</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {categories.length > 0 ? (
-                categories.map(category => (
-                  <tr key={category.id}>
-                    <td>{category.name}</td>
-                    <td>{category.questionPackCount || 0}</td>
-                    <td className="text-center">
-                      <button 
-                        className="btn btn-sm btn-outline-primary mr-2"
-                        onClick={() => openEditCategoryModal(category)}
-                      >
-                        <i className="fa fa-edit"></i> Edit
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDeleteCategory(category.id)}
-                      >
-                        <i className="fa fa-trash"></i> Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
+              {categories.length === 0 ? (
                 <tr>
-                  <td colSpan="3" className="text-center">No categories found</td>
+                  <td colSpan="3" className="text-center">No categories found. Create your first one!</td>
                 </tr>
+              ) : (
+                categories.map(category => {
+                  const packCount = questionPacks.filter(pack => pack.categoryId === category.id).length;
+                  return (
+                    <tr key={category.id}>
+                      <td>{category.name}</td>
+                      <td>{packCount}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => openEditCategoryModal(category)}
+                          >
+                            <i className="fas fa-edit"></i> Edit
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDeleteCategory(category.id)}
+                            disabled={packCount > 0}
+                            title={packCount > 0 ? "Delete associated question packs first" : ""}
+                          >
+                            <i className="fas fa-trash-alt"></i> Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -248,7 +255,7 @@ const Admin = () => {
         <div className="section-header">
           <h2>Question Packs</h2>
           <Link to="/admin/question-pack" className="btn btn-primary">
-            <i className="fa fa-plus"></i> Add Question Pack
+            <i className="fas fa-plus"></i> Add Question Pack
           </Link>
         </div>
         
@@ -260,39 +267,38 @@ const Admin = () => {
               <tr>
                 <th>Name</th>
                 <th>Category</th>
-                <th>Questions</th>
                 <th>Difficulty</th>
-                <th className="text-center">Actions</th>
+                <th>Questions</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {questionPacks.length > 0 ? (
+              {questionPacks.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center">No question packs found. Create your first one!</td>
+                </tr>
+              ) : (
                 questionPacks.map(pack => (
                   <tr key={pack.id}>
                     <td>{pack.name}</td>
                     <td>{pack.categoryName}</td>
-                    <td>{pack.questionCount || 0}</td>
-                    <td className="text-capitalize">{pack.difficulty || 'Easy'}</td>
-                    <td className="text-center">
-                      <Link 
-                        to={`/admin/question-pack/${pack.id}`}
-                        className="btn btn-sm btn-outline-primary mr-2"
-                      >
-                        <i className="fa fa-edit"></i> Edit
-                      </Link>
-                      <button 
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDeleteQuestionPack(pack.id)}
-                      >
-                        <i className="fa fa-trash"></i> Delete
-                      </button>
+                    <td style={{ textTransform: 'capitalize' }}>{pack.difficulty || 'N/A'}</td>
+                    <td>{pack.questionCount || pack.questions?.length || 0}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <Link to={`/admin/question-pack/${pack.id}`} className="btn btn-primary btn-sm">
+                          <i className="fas fa-edit"></i> Edit
+                        </Link>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDeleteQuestionPack(pack.id)}
+                        >
+                          <i className="fas fa-trash-alt"></i> Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="text-center">No question packs found</td>
-                </tr>
               )}
             </tbody>
           </table>
@@ -303,97 +309,109 @@ const Admin = () => {
 
   const renderCategoryModal = () => {
     return (
-      showCategoryModal && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>{categoryFormData.isEditing ? 'Edit Category' : 'Add Category'}</h3>
-              <button className="close-button" onClick={closeCategoryModal}>×</button>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={saveCategory}>
-                <div className="form-group">
-                  <label htmlFor="name">Category Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={categoryFormData.name}
-                    onChange={handleCategoryFormChange}
-                    className="form-control"
-                    required
-                  />
-                </div>
-                {error && <div className="alert alert-danger">{error}</div>}
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={closeCategoryModal}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    {categoryFormData.isEditing ? 'Update' : 'Add'} Category
-                  </button>
-                </div>
-              </form>
-            </div>
+      <div className="modal-backdrop">
+        <div className="modal">
+          <div className="modal-header">
+            <h3>{categoryFormData.isEditing ? 'Edit Category' : 'Add Category'}</h3>
+            <button className="close-button" onClick={closeCategoryModal}>
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <div className="modal-body">
+            {error && <div className="alert alert-danger">{error}</div>}
+            
+            <form onSubmit={saveCategory}>
+              <div className="form-group">
+                <label htmlFor="category-name" className="required-label">Category Name</label>
+                <input
+                  id="category-name"
+                  name="name"
+                  type="text"
+                  className="form-control"
+                  value={categoryFormData.name}
+                  onChange={handleCategoryFormChange}
+                  required
+                  placeholder="Enter category name"
+                />
+              </div>
+            </form>
+          </div>
+          
+          <div className="modal-footer">
+            <button 
+              className="btn btn-secondary" 
+              onClick={closeCategoryModal}
+            >
+              Cancel
+            </button>
+            <button 
+              className="btn btn-primary" 
+              onClick={saveCategory}
+            >
+              {categoryFormData.isEditing ? 'Update' : 'Save'}
+            </button>
           </div>
         </div>
-      )
+      </div>
     );
   };
 
   return (
     <div className="admin-container">
-      <header className="admin-header">
-        <div className="logo">TeksherMe Admin</div>
-        <div className="user-menu">
-          <span className="user-name">Admin</span>
-         {/* --- Added Logout Button --- */}
-          <button onClick={handleLogout} className="logout-button btn btn-outline-danger btn-sm ml-2">
-            <i className="fa fa-sign-out-alt"></i> Logout
-          </button>
-         {/* --- Optionally display logout error --- */}
-         {logoutError && <span className="logout-error text-danger ml-2">{logoutError}</span>}
+      <div className="sidebar">
+        <div className="sidebar-header">
+          <h1>TeksherMe</h1>
         </div>
-      </header>
-      
-      <div className="admin-content">
-        <nav className="admin-nav">
-          <ul>
-            <li 
-              className={activeTab === 'dashboard' ? 'active' : ''}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              <i className="fa fa-home"></i> Dashboard
-            </li>
-            <li 
-              className={activeTab === 'categories' ? 'active' : ''}
-              onClick={() => setActiveTab('categories')}
-            >
-              <i className="fa fa-folder"></i> Categories
-            </li>
-            <li 
-              className={activeTab === 'packs' ? 'active' : ''}
-              onClick={() => setActiveTab('packs')}
-            >
-              <i className="fa fa-book"></i> Question Packs
-            </li>
-          </ul>
-        </nav>
         
-        <main className="admin-main">
-          {loading ? (
-            <div className="loading">Loading...</div>
-          ) : (
-            <>
-              {activeTab === 'dashboard' && renderDashboard()}
-              {activeTab === 'categories' && renderCategories()}
-              {activeTab === 'packs' && renderQuestionPacks()}
-            </>
-          )}
-        </main>
+        <div className="sidebar-nav">
+          <button 
+            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            <i className="fas fa-chart-line"></i>
+            Dashboard
+          </button>
+          
+          <button 
+            className={`nav-item ${activeTab === 'categories' ? 'active' : ''}`}
+            onClick={() => setActiveTab('categories')}
+          >
+            <i className="fas fa-folder"></i>
+            Categories
+          </button>
+          
+          <button 
+            className={`nav-item ${activeTab === 'questionPacks' ? 'active' : ''}`}
+            onClick={() => setActiveTab('questionPacks')}
+          >
+            <i className="fas fa-file-alt"></i>
+            Question Packs
+          </button>
+        </div>
+        
+        <button onClick={handleLogout} className="logout-button">
+          <i className="fas fa-sign-out-alt"></i> Logout
+        </button>
+        
+        {logoutError && <div className="alert alert-danger">{logoutError}</div>}
       </div>
       
-      {renderCategoryModal()}
+      <div className="main-content">
+        {/* Render the selected tab */}
+        {loading ? (
+          <div className="loading-spinner"></div>
+        ) : (
+          <>
+            {activeTab === 'dashboard' && renderDashboard()}
+            {activeTab === 'categories' && renderCategories()}
+            {activeTab === 'questionPacks' && renderQuestionPacks()}
+          </>
+        )}
+      </div>
+      
+      {/* Category Modal */}
+      {showCategoryModal && renderCategoryModal()}
     </div>
   );
 };
