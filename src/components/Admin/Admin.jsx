@@ -7,11 +7,25 @@ import './Admin.css';
 
 const Admin = () => {
   const navigate = useNavigate();
-  // ... other state and hooks ...
   const [logoutError, setLogoutError] = useState(''); // Optional: for displaying logout errors
+  
+  // State
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryFormData, setCategoryFormData] = useState({
+    id: '',
+    name: '',
+    isEditing: false
+  });
+  const [error, setError] = useState('');
+  
+  // Filter state for question packs
+  const [packFilters, setPackFilters] = useState({
+    categoryId: '',
+    difficulty: ''
+  });
 
-  // ... other functions ...
-
+  // Handle logout function
   const handleLogout = async () => {
     setLogoutError(''); // Clear previous errors
     try {
@@ -26,16 +40,6 @@ const Admin = () => {
       // Optionally show an alert: alert("Logout failed. Please try again.");
     }
   };
-
-  // State
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [categoryFormData, setCategoryFormData] = useState({
-    id: '',
-    name: '',
-    isEditing: false
-  });
-  const [error, setError] = useState('');
 
   // Use custom hooks for data
   const { 
@@ -54,6 +58,23 @@ const Admin = () => {
 
   // Loading state
   const loading = categoriesLoading || packsLoading;
+
+  // Filter change handler
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setPackFilters(prevFilters => ({
+      ...prevFilters,
+      [name]: value
+    }));
+  };
+
+  // Reset filters
+  const resetFilters = () => {
+    setPackFilters({
+      categoryId: '',
+      difficulty: ''
+    });
+  };
 
   // Category functions
   const openAddCategoryModal = () => {
@@ -166,7 +187,7 @@ const Admin = () => {
             {questionPacks.slice(0, 3).map(pack => (
               <div className="activity-item" key={pack.id}>
                 <div className="activity-icon">
-                  <i className="fa fa-file-alt"></i>
+                  <i className="fas fa-file-alt"></i>
                 </div>
                 <div className="activity-content">
                   <div className="activity-title">{pack.name}</div>
@@ -250,6 +271,21 @@ const Admin = () => {
   };
 
   const renderQuestionPacks = () => {
+    // Filter question packs based on selected filters
+    const filteredPacks = questionPacks.filter(pack => {
+      // Filter by category
+      if (packFilters.categoryId && pack.categoryId !== packFilters.categoryId) {
+        return false;
+      }
+      
+      // Filter by difficulty
+      if (packFilters.difficulty && pack.difficulty !== packFilters.difficulty) {
+        return false;
+      }
+      
+      return true;
+    });
+    
     return (
       <div className="question-packs-container">
         <div className="section-header">
@@ -260,6 +296,50 @@ const Admin = () => {
         </div>
         
         {error && <div className="alert alert-danger">{error}</div>}
+        
+        <div className="filters-container">
+          <div className="filter-row">
+            <div className="filter-group">
+              <label htmlFor="categoryFilter">Category</label>
+              <select
+                id="categoryFilter"
+                name="categoryId"
+                className="form-control"
+                value={packFilters.categoryId}
+                onChange={handleFilterChange}
+              >
+                <option value="">All Categories</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label htmlFor="difficultyFilter">Difficulty</label>
+              <select
+                id="difficultyFilter"
+                name="difficulty"
+                className="form-control"
+                value={packFilters.difficulty}
+                onChange={handleFilterChange}
+              >
+                <option value="">All Difficulties</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            
+            <div className="filter-group filter-actions">
+              <button className="btn btn-secondary" onClick={resetFilters}>
+                <i className="fas fa-undo"></i> Reset Filters
+              </button>
+            </div>
+          </div>
+        </div>
         
         <div className="table-container">
           <table className="data-table">
@@ -273,12 +353,16 @@ const Admin = () => {
               </tr>
             </thead>
             <tbody>
-              {questionPacks.length === 0 ? (
+              {filteredPacks.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center">No question packs found. Create your first one!</td>
+                  <td colSpan="5" className="text-center">
+                    {questionPacks.length === 0 
+                      ? "No question packs found. Create your first one!"
+                      : "No question packs match the selected filters."}
+                  </td>
                 </tr>
               ) : (
-                questionPacks.map(pack => (
+                filteredPacks.map(pack => (
                   <tr key={pack.id}>
                     <td>{pack.name}</td>
                     <td>{pack.categoryName}</td>
