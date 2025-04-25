@@ -4,7 +4,7 @@ import { useAuth } from '../../firebase/hooks';
 import './Login.css';
 
 const Login = () => {
-  const [email, setEmail] = useState('ijgilik@example.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -21,6 +21,11 @@ const Login = () => {
     e.preventDefault();
     setError('');
 
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+
     try {
       await login(email, password);
       navigate('/admin');
@@ -36,12 +41,15 @@ const Login = () => {
         <h2 className="login-title">Login</h2>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label>Username</label>
+            <label>Email</label>
             <input
-              type="text"
+              type="email"
               value={email}
-              disabled
+              onChange={(e) => setEmail(e.target.value)}
               className="form-control"
+              required
+              placeholder="Enter email"
+              autoComplete="email"
             />
           </div>
           
