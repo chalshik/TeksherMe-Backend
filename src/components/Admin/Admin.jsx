@@ -3,7 +3,6 @@ import { logout } from '../../firebase/auth'; // Update path if needed
 import { useNavigate } from 'react-router-dom'; // For redirection after logout
 import { Link } from 'react-router-dom';
 import { useCategories, useQuestionPacks } from '../../firebase/hooks';
-import './Admin.css';
 
 const Admin = () => {
   const navigate = useNavigate();

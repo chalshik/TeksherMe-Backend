@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCategories, useQuestionPacks } from '../../firebase/hooks';
-import './QuestionPackEditor.css';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const QuestionPackEditor = () => {
   // Get pack ID from URL if editing existing pack
@@ -133,6 +135,149 @@ const QuestionPackEditor = () => {
         options: updatedOptions
       });
     }
+  };
+
+  // Fix handleOptionKeyPress to navigate to the next option on Enter key press
+  const handleOptionKeyPress = (e, index) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Find the next input and focus it
+      const nextInput = document.querySelector(`#option-${index + 1}`);
+      if (nextInput) {
+        nextInput.focus();
+      } else {
+        // If no next option, add a new one
+        handleAddOption();
+        // Focus will be set in useEffect after the option is added
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevInput = document.querySelector(`#option-${index - 1}`);
+      if (prevInput) {
+        prevInput.focus();
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextInput = document.querySelector(`#option-${index + 1}`);
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+  };
+
+  // Fix handleEditOptionKeyPress to navigate to the next option on Enter key press
+  const handleEditOptionKeyPress = (e, questionIndex, optionIndex) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Find the next input and focus it
+      const nextInput = document.querySelector(`#edit-option-${questionIndex}-${optionIndex + 1}`);
+      if (nextInput) {
+        nextInput.focus();
+      } else {
+        // If no next option, add a new one
+        handleAddEditOption(questionIndex);
+        // Focus will be set in useEffect after the option is added
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevInput = document.querySelector(`#edit-option-${questionIndex}-${optionIndex - 1}`);
+      if (prevInput) {
+        prevInput.focus();
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextInput = document.querySelector(`#edit-option-${questionIndex}-${optionIndex + 1}`);
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+  };
+
+  // Add use effect to focus on new option after adding
+  useEffect(() => {
+    // Focus on newly added option
+    const newOptionIndex = newQuestion.options.length - 1;
+    if (newOptionIndex >= 0) {
+      const newOptionInput = document.querySelector(`#option-${newOptionIndex}`);
+      if (newOptionInput) {
+        newOptionInput.focus();
+      }
+    }
+  }, [newQuestion.options.length]);
+
+  // Add drag and drop functionality for questions
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id) {
+      const oldIndex = packDetails.questions.findIndex(q => q.id === active.id);
+      const newIndex = packDetails.questions.findIndex(q => q.id === over.id);
+      
+      const updatedQuestions = arrayMove(packDetails.questions, oldIndex, newIndex);
+      setPackDetails({
+        ...packDetails,
+        questions: updatedQuestions
+      });
+    }
+  };
+
+  // SortableQuestion component for drag and drop
+  const SortableQuestion = ({ question, index }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition
+    } = useSortable({ id: question.id });
+    
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      marginBottom: '10px',
+      cursor: 'grab'
+    };
+    
+    return (
+      <div 
+        ref={setNodeRef} 
+        style={style} 
+        {...attributes} 
+        className="question-item"
+      >
+        <div className="question-drag-handle" {...listeners}>
+          ⠿
+        </div>
+        <div className="question-content">
+          <div className="question-header">
+            <h4>Question {index + 1}</h4>
+            <div className="question-actions">
+              <button onClick={() => handleEditQuestion(index)}>Edit</button>
+              <button onClick={() => handleDeleteQuestion(index)}>Delete</button>
+            </div>
+          </div>
+          <p>{question.text}</p>
+          <div className="options-list">
+            {question.options.map((option, optionIndex) => (
+              <div 
+                key={optionIndex} 
+                className={`option ${option.isCorrect ? 'correct' : ''}`}
+              >
+                {option.text}
+                {option.isCorrect && <span className="correct-indicator"> ✓</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Add new question to pack
@@ -490,7 +635,7 @@ const QuestionPackEditor = () => {
                   onChange={handlePackDetailChange}
                   required
                 >
-                  <option value="">Select a category</option>
+                  <option value="" disabled>Select a category</option>
                   {categories.map(category => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -572,14 +717,8 @@ const QuestionPackEditor = () => {
           
           {newQuestion.options.map((option, index) => (
             <div key={index} className="option-form-item">
-              <div className="option-radio">
-                <input
-                  type="radio"
-                  id={`option-${index}`}
-                  name="correctOption"
-                  checked={option.isCorrect}
-                  onChange={() => handleCorrectOptionChange(index)}
-                />
+              <div className="option-number">
+                {index + 1}
               </div>
               
               <div className="option-form-control">
@@ -588,26 +727,41 @@ const QuestionPackEditor = () => {
                   className="form-control"
                   value={option.text}
                   onChange={(e) => handleOptionChange(index, e)}
+                  onKeyPress={(e) => handleOptionKeyPress(e, index)}
                   placeholder={`Option ${index + 1}`}
                   required={index < 2}
                 />
               </div>
               
-              {option.isCorrect && (
-                <span className="correct-label">
-                  <i className="fas fa-check-circle"></i> Correct
-                </span>
-              )}
+              <div className="option-correct-wrapper">
+                {option.isCorrect ? (
+                  <button 
+                    type="button"
+                    className="option-correct-btn active"
+                    onClick={() => {}}
+                  >
+                    <i className="fas fa-check-circle"></i> Correct Answer
+                  </button>
+                ) : (
+                  <button 
+                    type="button"
+                    className="option-correct-btn"
+                    onClick={() => handleCorrectOptionChange(index)}
+                  >
+                    Mark as Correct
+                  </button>
+                )}
+              </div>
               
-              {index > 1 && (
-                <button
-                  type="button"
-                  className="btn btn-danger btn-sm"
-                  onClick={() => handleRemoveOption(index)}
-                >
-                  <i className="fas fa-times"></i>
-                </button>
-              )}
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={() => handleRemoveOption(index)}
+                disabled={newQuestion.options.length <= 2}
+                title={newQuestion.options.length <= 2 ? "At least 2 options are required" : ""}
+              >
+                <i className="fas fa-times"></i>
+              </button>
             </div>
           ))}
           
@@ -630,59 +784,29 @@ const QuestionPackEditor = () => {
       </div>
       
       {/* Questions List */}
+      {packDetails.questions.length > 0 && (
       <div className="editor-card">
-        <h2 className="editor-card-title">Questions ({packDetails.questions.length})</h2>
+          <h2 className="editor-card-title">Questions</h2>
         
-        {packDetails.questions.length === 0 ? (
-          <div className="text-center">
-            <p>No questions added yet. Use the form above to add questions.</p>
-          </div>
-        ) : (
           <div className="questions-list">
-            {packDetails.questions.map((question, index) => (
-              <div key={question.id} className="question-item">
-                <div className="question-header">
-                  <div className="question-number">Question {index + 1}</div>
-                  <div className="question-actions">
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => {
-                        setEditingQuestionIndex(index);
-                        setEditingQuestion({...question});
-                        setShowModal(true);
-                      }}
-                    >
-                      <i className="fas fa-edit"></i> Edit
-                    </button>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleDeleteQuestion(index)}
-                    >
-                      <i className="fas fa-trash-alt"></i> Delete
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="question-text">{question.text}</div>
-                
-                <div className="options-list">
-                  {question.options.map((option, optionIndex) => (
-                    <div
-                      key={optionIndex}
-                      className={`option-item ${option.isCorrect ? 'correct' : ''}`}
-                    >
-                      <div className="option-indicator">
-                        {option.isCorrect ? <i className="fas fa-check"></i> : optionIndex + 1}
-                      </div>
-                      <div className="option-text">{option.text}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <DndContext 
+              sensors={sensors} 
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={packDetails.questions.map(q => q.id)} strategy={verticalListSortingStrategy}>
+                {packDetails.questions.map((question, index) => (
+                  <SortableQuestion 
+                    key={question.id} 
+                    question={question} 
+                    index={index} 
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
           </div>
         )}
-      </div>
       
       {/* Edit Question Modal */}
       {showModal && (
@@ -713,14 +837,8 @@ const QuestionPackEditor = () => {
                   
                   {editingQuestion.options.map((option, index) => (
                     <div key={index} className="option-form-item">
-                      <div className="option-radio">
-                        <input
-                          type="radio"
-                          id={`edit-option-${index}`}
-                          name="editCorrectOption"
-                          checked={option.isCorrect}
-                          onChange={() => handleEditCorrectOptionChange(index)}
-                        />
+                      <div className="option-number">
+                        {index + 1}
                       </div>
                       
                       <div className="option-form-control">
@@ -729,26 +847,41 @@ const QuestionPackEditor = () => {
                           className="form-control"
                           value={option.text}
                           onChange={(e) => handleEditOptionChange(index, e)}
+                          onKeyPress={(e) => handleEditOptionKeyPress(e, editingQuestionIndex, index)}
                           placeholder={`Option ${index + 1}`}
                           required={index < 2}
                         />
                       </div>
                       
-                      {option.isCorrect && (
-                        <span className="correct-label">
-                          <i className="fas fa-check-circle"></i> Correct
-                        </span>
+                      <div className="option-correct-wrapper">
+                        {option.isCorrect ? (
+                          <button 
+                            type="button"
+                            className="option-correct-btn active"
+                            onClick={() => {}}
+                          >
+                            <i className="fas fa-check-circle"></i> Correct Answer
+                          </button>
+                        ) : (
+                          <button 
+                            type="button"
+                            className="option-correct-btn"
+                            onClick={() => handleEditCorrectOptionChange(index)}
+                          >
+                            Mark as Correct
+                          </button>
                       )}
+                      </div>
                       
-                      {index > 1 && (
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleRemoveEditOption(index)}
-                        >
-                          <i className="fas fa-times"></i>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleRemoveEditOption(index)}
+                        disabled={editingQuestion.options.length <= 2}
+                        title={editingQuestion.options.length <= 2 ? "At least 2 options are required" : ""}
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
                     </div>
                   ))}
                   

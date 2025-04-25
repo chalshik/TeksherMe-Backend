@@ -1,0 +1,263 @@
+/* QuestionPackEditor specific styles */
+
+/* Editor layout */
+.editor-container {
+  max-width: 900px;
+  margin: 0 auto;
+  animation: fadeIn var(--transition-medium);
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.editor-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* Button group with spacing */
+.btn-group {
+  display: flex;
+  gap: 12px;
+}
+
+.editor-card {
+  background-color: white;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-subtle);
+  margin-bottom: 20px;
+  animation: fadeIn var(--transition-medium);
+}
+
+.editor-card:hover {
+  background-color: var(--bg-hover);
+  box-shadow: var(--shadow-default);
+}
+
+.editor-card-title {
+  margin: 0;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* Questions list */
+.questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.question-card {
+  background-color: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-subtle);
+  padding: 16px;
+}
+
+.question-card:hover {
+  background-color: var(--bg-hover);
+  box-shadow: var(--shadow-default);
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.question-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-color: rgba(55, 53, 47, 0.08);
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+  margin-right: 12px;
+}
+
+.question-actions {
+  margin-left: auto;
+  opacity: 0.5;
+}
+
+.question-card:hover .question-actions {
+  opacity: 1;
+}
+
+/* Options styling */
+.options-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.option-item {
+  padding: 8px 12px;
+  border-radius: 3px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  background-color: rgba(55, 53, 47, 0.03);
+}
+
+.option-item.correct {
+  background-color: var(--bg-success-light);
+  color: var(--color-green);
+}
+
+.option-item.incorrect {
+  color: var(--color-text);
+}
+
+.option-item.correct:hover {
+  background-color: rgba(15, 123, 108, 0.12);
+}
+
+.option-item.incorrect:hover {
+  background-color: rgba(55, 53, 47, 0.06);
+}
+
+.option-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  text-align: center;
+  line-height: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+  background-color: rgba(55, 53, 47, 0.08);
+  color: var(--color-text);
+}
+
+.option-item.correct .option-indicator {
+  background-color: var(--color-green);
+  color: white;
+}
+
+.option-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.option-correct-tag {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: rgba(15, 123, 108, 0.12);
+  color: var(--color-green);
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+/* Option editing form */
+.option-form-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-radius: 4px;
+}
+
+.option-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: var(--color-light-gray);
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 12px;
+}
+
+.option-form-control {
+  flex: 1;
+  margin-right: 12px;
+}
+
+.option-correct-wrapper {
+  margin: 0 8px;
+}
+
+.option-correct-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 3px;
+  color: var(--color-text);
+  background-color: transparent;
+  border: 1px solid var(--border-default);
+}
+
+.option-correct-btn:hover {
+  background-color: var(--color-light-gray);
+}
+
+.option-correct-btn.active {
+  background-color: var(--bg-success-light);
+  color: var(--color-green);
+  border-color: rgba(15, 123, 108, 0.3);
+}
+
+.option-correct-btn.active:hover {
+  background-color: rgba(15, 123, 108, 0.12);
+}
+
+.option-correct-btn i {
+  margin-right: 4px;
+}
+
+/* Style for the disabled delete buttons */
+.option-form-item .btn-danger[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
+.option-form-item .btn-danger[disabled]:hover {
+  background-color: transparent;
+  color: var(--color-red);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .editor-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .editor-title {
+    font-size: 24px;
+  }
+  
+  .options-list {
+    grid-template-columns: 1fr;
+  }
+} 

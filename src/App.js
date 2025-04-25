@@ -1,16 +1,19 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import QuestionPackEditor from './components/Admin/QuestionPackEditor';
 import Admin from './components/Admin/Admin';
 import Login from './components/Login/Login';
 import ProtectedRoute from './components/Login/ProtectedRoute';
-import './App.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import './styles'; // Import all styles through the index file
 
-function App() {
+// Simple fade implementation without react-transition-group
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <Router>
-      <Routes>
+    <div className="routes-container">
+      <Routes location={location}>
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         
@@ -51,6 +54,16 @@ function App() {
         {/* Catch all - redirect to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <AnimatedRoutes />
+      </div>
     </Router>
   );
 }
