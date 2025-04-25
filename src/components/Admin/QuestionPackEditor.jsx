@@ -244,6 +244,48 @@ const QuestionPackEditor = () => {
       options: updatedOptions
     });
   };
+  // Add this function to your component
+  const handleRemoveEditOption = (index) => {
+    // Don't allow removing if we only have 2 options (minimum required)
+    if (editingQuestion.options.length <= 2) {
+      return;
+    }
+    
+    const updatedOptions = [...editingQuestion.options];
+    updatedOptions.splice(index, 1);
+    
+    // If we're removing the correct option, set the first remaining option as correct
+    const hasCorrectOption = updatedOptions.some(opt => opt.isCorrect);
+    if (!hasCorrectOption && updatedOptions.length > 0) {
+      updatedOptions[0].isCorrect = true;
+    }
+    
+    setEditingQuestion({
+      ...editingQuestion,
+      options: updatedOptions
+    });
+  };
+
+  const handleRemoveOption = (index) => {
+    // Don't allow removing if we only have 2 options (minimum required)
+    if (newQuestion.options.length <= 2) {
+      return;
+    }
+    
+    const updatedOptions = [...newQuestion.options];
+    updatedOptions.splice(index, 1);
+    
+    // If we're removing the correct option, set the first remaining option as correct
+    const hasCorrectOption = updatedOptions.some(opt => opt.isCorrect);
+    if (!hasCorrectOption && updatedOptions.length > 0) {
+      updatedOptions[0].isCorrect = true;
+    }
+    
+    setNewQuestion({
+      ...newQuestion,
+      options: updatedOptions
+    });
+  };
 
   // Save edited question
   const handleSaveEditedQuestion = () => {
@@ -538,6 +580,16 @@ const QuestionPackEditor = () => {
                             </span>
                           </label>
                         </div>
+                        {/* Add the remove button here */}
+                        {newQuestion.options.length > 2 && (
+                          <button 
+                            type="button"
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleRemoveOption(index)}
+                          >
+                            <i className="fas fa-times"></i>
+                          </button>
+                        )}
                       </div>
                     ))}
                     
@@ -634,31 +686,41 @@ const QuestionPackEditor = () => {
                 <label className="required-label">Options (minimum 2)</label>
                 
                 {editingQuestion.options.map((option, index) => (
-                  <div className="option-row" key={index}>
-                    <div className="option-input">
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={option.text}
-                        onChange={(e) => handleEditOptionChange(index, e)}
-                        placeholder={`Option ${index + 1}`}
-                      />
-                    </div>
-                    <div className="option-correct">
-                      <label className="option-label">
-                        <input
-                          type="radio"
-                          name="editCorrectOption"
-                          checked={option.isCorrect}
-                          onChange={() => handleEditCorrectOptionChange(index)}
-                        />
-                        <span className={`correct-toggle ${option.isCorrect ? 'correct-toggle-active' : ''}`}>
-                          <i className="fas fa-check"></i> Correct
-                        </span>
-                      </label>
-                    </div>
+                <div className="option-row" key={index}>
+                  <div className="option-input">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={option.text}
+                      onChange={(e) => handleEditOptionChange(index, e)}
+                      placeholder={`Option ${index + 1}`}
+                    />
                   </div>
-                ))}
+                  <div className="option-correct">
+                    <label className="option-label">
+                      <input
+                        type="radio"
+                        name="editCorrectOption"
+                        checked={option.isCorrect}
+                        onChange={() => handleEditCorrectOptionChange(index)}
+                      />
+                      <span className={`correct-toggle ${option.isCorrect ? 'correct-toggle-active' : ''}`}>
+                        <i className="fas fa-check"></i> Correct
+                      </span>
+                    </label>
+                  </div>
+                  {/* Add the remove button here */}
+                  {editingQuestion.options.length > 2 && (
+                    <button 
+                      type="button"
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleRemoveEditOption(index)}
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
+                </div>
+              ))}
                 
                 <button 
                   type="button" 

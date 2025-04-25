@@ -1,9 +1,32 @@
 import React, { useState } from 'react';
+import { logout } from '../../firebase/auth'; // Update path if needed
+import { useNavigate } from 'react-router-dom'; // For redirection after logout
 import { Link } from 'react-router-dom';
 import { useCategories, useQuestionPacks } from '../../firebase/hooks';
 import './Admin.css';
 
 const Admin = () => {
+  const navigate = useNavigate();
+  // ... other state and hooks ...
+  const [logoutError, setLogoutError] = useState(''); // Optional: for displaying logout errors
+
+  // ... other functions ...
+
+  const handleLogout = async () => {
+    setLogoutError(''); // Clear previous errors
+    try {
+      console.log("Attempting logout...");
+      await logout(); // Call the imported logout function
+      console.log("Logout successful.");
+      // Redirect to the login page or home page after successful logout
+      navigate('/login'); // Or '/' or wherever your public/login page is
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setLogoutError("Logout failed. Please try again."); // Set error state to display message
+      // Optionally show an alert: alert("Logout failed. Please try again.");
+    }
+  };
+
   // State
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -66,6 +89,7 @@ const Admin = () => {
     });
   };
 
+  
   const saveCategory = async (e) => {
     e.preventDefault();
     
@@ -323,6 +347,12 @@ const Admin = () => {
         <div className="logo">TeksherMe Admin</div>
         <div className="user-menu">
           <span className="user-name">Admin</span>
+         {/* --- Added Logout Button --- */}
+          <button onClick={handleLogout} className="logout-button btn btn-outline-danger btn-sm ml-2">
+            <i className="fa fa-sign-out-alt"></i> Logout
+          </button>
+         {/* --- Optionally display logout error --- */}
+         {logoutError && <span className="logout-error text-danger ml-2">{logoutError}</span>}
         </div>
       </header>
       
