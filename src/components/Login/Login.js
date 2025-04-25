@@ -38,30 +38,36 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2 className="login-title">Login</h2>
+        <h2 className="login-title">Welcome Back</h2>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label>Email</label>
+            <label htmlFor="email">
+              <i className="fas fa-envelope"></i> Email Address
+            </label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="form-control"
               required
-              placeholder="Enter email"
+              placeholder="Enter your email"
               autoComplete="email"
             />
           </div>
           
           <div className="form-group">
-            <label>Password</label>
+            <label htmlFor="password">
+              <i className="fas fa-lock"></i> Password
+            </label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="form-control"
               required
-              placeholder="Enter password"
+              placeholder="Enter your password"
               autoComplete="current-password"
             />
           </div>
@@ -73,9 +79,20 @@ const Login = () => {
             className="login-button" 
             disabled={authLoading}
           >
-            {authLoading ? 'Logging in...' : 'Login'}
+            {authLoading ? (
+              <>
+                <i className="fas fa-circle-notch fa-spin"></i> Logging in...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-sign-in-alt"></i> Sign In
+              </>
+            )}
           </button>
         </form>
+        <div className="login-footer">
+          Secure login with Firebase Authentication
+        </div>
       </div>
     </div>
   );
