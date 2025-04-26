@@ -1,52 +1,131 @@
-/* QuestionPackEditor specific styles */
+/* QuestionPackEditor with Notion-inspired styling */
 
 /* Editor layout */
 .editor-container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  animation: fadeIn var(--transition-medium);
+  animation: fadeIn 0.3s ease;
+  color: rgb(55, 53, 47);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif;
+  padding: 0 16px;
 }
 
 .editor-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(55, 53, 47, 0.09);
 }
 
 .editor-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--color-text);
+  font-size: 32px;
+  font-weight: 700;
+  color: rgb(55, 53, 47);
   margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
 /* Button group with spacing */
 .btn-group {
   display: flex;
-  gap: 12px;
+  gap: 10px;
+}
+
+.btn {
+  padding: 7px 14px;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 500;
+  background: white;
+  color: rgb(55, 53, 47);
+  border: 1px solid rgba(55, 53, 47, 0.16);
+  transition: background 0.15s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  background: rgba(55, 53, 47, 0.04);
+}
+
+.btn-primary {
+  background-color: rgb(46, 170, 220);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: rgb(6, 156, 205);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(55, 53, 47, 0.04);
+}
+
+.btn i {
+  font-size: 14px;
 }
 
 .editor-card {
   background-color: white;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-subtle);
-  margin-bottom: 20px;
-  animation: fadeIn var(--transition-medium);
+  border-radius: 4px;
+  box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, 
+              rgba(15, 15, 15, 0.1) 0px 3px 6px;
+  margin-bottom: 28px;
+  transition: box-shadow 0.15s ease;
+  overflow: hidden;
 }
 
 .editor-card:hover {
-  background-color: var(--bg-hover);
-  box-shadow: var(--shadow-default);
+  box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, 
+              rgba(15, 15, 15, 0.1) 0px 4px 8px;
 }
 
 .editor-card-title {
   margin: 0;
-  padding: 16px;
-  font-size: 18px;
+  padding: 18px 20px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--color-text);
-  border-bottom: 1px solid var(--border-default);
+  color: rgb(55, 53, 47);
+  border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+/* Form elements */
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(55, 53, 47, 0.16);
+  font-size: 14px;
+  transition: border 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: rgb(46, 170, 220);
+  box-shadow: rgba(46, 170, 220, 0.2) 0px 0px 0px 2px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  padding: 0 20px;
+}
+
+.form-group:first-of-type {
+  padding-top: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: rgba(55, 53, 47, 0.6);
+  font-weight: 500;
 }
 
 /* Questions list */
@@ -54,19 +133,44 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px;
+  padding: 20px;
 }
 
-.question-card {
+/* Styles for the drag and drop question items */
+.question-item {
+  display: flex;
   background-color: white;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-subtle);
-  padding: 16px;
+  border-radius: 3px;
+  box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
 }
 
-.question-card:hover {
-  background-color: var(--bg-hover);
-  box-shadow: var(--shadow-default);
+.question-item:hover {
+  box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, 
+              rgba(15, 15, 15, 0.1) 0px 3px 6px;
+}
+
+.question-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  color: rgba(55, 53, 47, 0.4);
+  font-size: 14px;
+  cursor: grab;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.question-drag-handle:hover {
+  background-color: rgba(55, 53, 47, 0.04);
+  color: rgba(55, 53, 47, 0.6);
+}
+
+.question-content {
+  flex: 1;
+  padding: 16px 20px;
 }
 
 .question-header {
@@ -74,30 +178,59 @@
   align-items: center;
   padding-bottom: 12px;
   margin-bottom: 12px;
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid rgba(55, 53, 47, 0.09);
 }
 
-.question-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  background-color: rgba(55, 53, 47, 0.08);
-  color: var(--color-text);
-  font-size: 14px;
+.question-header h4 {
+  margin: 0;
+  font-size: 15px;
   font-weight: 600;
-  margin-right: 12px;
+  color: rgb(55, 53, 47);
 }
 
 .question-actions {
   margin-left: auto;
-  opacity: 0.5;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
-.question-card:hover .question-actions {
+.question-item:hover .question-actions {
   opacity: 1;
+}
+
+.question-actions button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 14px;
+  border-radius: 3px;
+  border: none;
+  background-color: rgba(55, 53, 47, 0.04);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(55, 53, 47, 0.65);
+}
+
+.question-actions button:first-child:hover {
+  background-color: rgba(46, 170, 220, 0.1);
+  color: rgb(46, 170, 220);
+}
+
+.question-actions button:last-child:hover {
+  background-color: rgba(235, 87, 87, 0.1);
+  color: rgb(235, 87, 87);
+}
+
+.question-item p {
+  margin: 0 0 14px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgb(55, 53, 47);
 }
 
 /* Options styling */
@@ -106,70 +239,37 @@
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.option-item {
-  padding: 8px 12px;
+.option {
+  padding: 8px 10px;
   border-radius: 3px;
   font-size: 14px;
   display: flex;
   align-items: center;
-  background-color: rgba(55, 53, 47, 0.03);
+  background-color: rgba(55, 53, 47, 0.04);
+  transition: background 0.15s ease;
 }
 
-.option-item.correct {
-  background-color: var(--bg-success-light);
-  color: var(--color-green);
-}
-
-.option-item.incorrect {
-  color: var(--color-text);
-}
-
-.option-item.correct:hover {
-  background-color: rgba(15, 123, 108, 0.12);
-}
-
-.option-item.incorrect:hover {
+.option:hover {
   background-color: rgba(55, 53, 47, 0.06);
 }
 
-.option-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 3px;
-  text-align: center;
-  line-height: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-right: 8px;
-  background-color: rgba(55, 53, 47, 0.08);
-  color: var(--color-text);
+.option.correct {
+  background-color: rgba(68, 131, 97, 0.1);
+  color: rgb(68, 131, 97);
+  position: relative;
 }
 
-.option-item.correct .option-indicator {
-  background-color: var(--color-green);
-  color: white;
+.option.correct:hover {
+  background-color: rgba(68, 131, 97, 0.15);
 }
 
-.option-text {
-  flex: 1;
-  line-height: 1.4;
-}
-
-.option-correct-tag {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background-color: rgba(15, 123, 108, 0.12);
-  color: var(--color-green);
-  margin-left: 8px;
-  font-weight: 500;
+.correct-indicator {
+  display: none; /* Hide the check marks */
 }
 
 /* Option editing form */
@@ -177,20 +277,20 @@
   display: flex;
   align-items: center;
   margin-bottom: 12px;
-  padding: 8px 0;
-  border-radius: 4px;
+  padding: 8px 20px;
+  border-radius: 3px;
 }
 
 .option-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  background-color: var(--color-light-gray);
-  color: var(--color-text);
-  font-size: 14px;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 3px;
+  background-color: rgba(55, 53, 47, 0.08);
+  color: rgba(55, 53, 47, 0.8);
+  font-size: 13px;
   font-weight: 500;
   margin-right: 12px;
 }
@@ -201,63 +301,218 @@
 }
 
 .option-correct-wrapper {
-  margin: 0 8px;
+  margin: 0 12px;
 }
 
 .option-correct-btn {
   display: inline-flex;
   align-items: center;
-  padding: 6px 10px;
-  font-size: 14px;
+  padding: 5px 10px;
+  font-size: 13px;
   border-radius: 3px;
-  color: var(--color-text);
+  color: rgba(55, 53, 47, 0.65);
   background-color: transparent;
-  border: 1px solid var(--border-default);
+  border: 1px solid rgba(55, 53, 47, 0.16);
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .option-correct-btn:hover {
-  background-color: var(--color-light-gray);
+  background-color: rgba(55, 53, 47, 0.04);
 }
 
 .option-correct-btn.active {
-  background-color: var(--bg-success-light);
-  color: var(--color-green);
-  border-color: rgba(15, 123, 108, 0.3);
+  background-color: rgba(68, 131, 97, 0.1);
+  color: rgb(68, 131, 97);
+  border-color: rgba(68, 131, 97, 0.2);
 }
 
 .option-correct-btn.active:hover {
-  background-color: rgba(15, 123, 108, 0.12);
+  background-color: rgba(68, 131, 97, 0.15);
 }
 
 .option-correct-btn i {
   margin-right: 4px;
+  font-size: 12px;
 }
 
-/* Style for the disabled delete buttons */
+/* Style for the delete buttons */
+.btn-danger {
+  color: rgba(235, 87, 87, 0.9);
+  background: rgba(235, 87, 87, 0.1);
+  border: none;
+  transition: all 0.15s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.btn-danger:hover {
+  background: rgba(235, 87, 87, 0.2);
+  color: rgb(235, 87, 87);
+}
+
 .option-form-item .btn-danger[disabled] {
   opacity: 0.4;
   cursor: not-allowed;
-  background-color: transparent;
+  background-color: rgba(235, 87, 87, 0.05);
 }
 
 .option-form-item .btn-danger[disabled]:hover {
-  background-color: transparent;
-  color: var(--color-red);
+  background-color: rgba(235, 87, 87, 0.05);
+}
+
+/* Modal styling */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 15, 15, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background: white;
+  border-radius: 4px;
+  box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, 
+              rgba(15, 15, 15, 0.1) 0px 5px 10px, 
+              rgba(15, 15, 15, 0.2) 0px 15px 40px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgb(55, 53, 47);
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: rgba(55, 53, 47, 0.4);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 3px;
+  transition: background 0.15s ease, color 0.15s ease;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background-color: rgba(55, 53, 47, 0.08);
+  color: rgba(55, 53, 47, 0.7);
+}
+
+.modal-body {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-body .form-group {
+  padding: 0;
+}
+
+.modal-body h3 {
+  margin: 20px 0 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgb(55, 53, 47);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+/* Alert styles */
+.alert {
+  padding: 14px 16px;
+  border-radius: 3px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  animation: fadeIn 0.3s ease;
+}
+
+.alert-danger {
+  background-color: rgba(235, 87, 87, 0.1);
+  color: rgb(235, 87, 87);
+  border: 1px solid rgba(235, 87, 87, 0.2);
+}
+
+.alert-success {
+  background-color: rgba(68, 131, 97, 0.1);
+  color: rgb(68, 131, 97);
+  border: 1px solid rgba(68, 131, 97, 0.2);
+}
+
+/* Required label */
+.required-label::after {
+  content: "*";
+  color: rgb(235, 87, 87);
+  margin-left: 4px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Responsive styles */
 @media (max-width: 768px) {
   .editor-header {
     flex-direction: column;
+    gap: 12px;
     align-items: flex-start;
-    gap: 16px;
   }
   
   .editor-title {
-    font-size: 24px;
+    margin-bottom: 12px;
   }
   
   .options-list {
     grid-template-columns: 1fr;
+  }
+  
+  .option-form-item {
+    padding: 8px 12px;
+  }
+  
+  .form-group {
+    padding: 0 12px;
   }
 } 

@@ -319,15 +319,80 @@
   gap: 8px;
 }
 
-/* Action buttons in tables */
+/* Action buttons */
 .action-buttons {
   display: flex;
   gap: 8px;
+  justify-content: flex-start;
+}
+
+.data-table tr .action-buttons {
   opacity: 0.7;
+  transition: opacity 0.15s ease;
 }
 
 .data-table tr:hover .action-buttons {
   opacity: 1;
+}
+
+.action-buttons .btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: background 0.15s ease, color 0.15s ease;
+  line-height: 1;
+}
+
+.action-buttons .btn i {
+  font-size: 14px;
+  line-height: 1;
+  width: auto;
+  height: auto;
+  display: block;
+  box-sizing: content-box;
+}
+
+.action-buttons .btn i.fa-trash-alt {
+  position: relative;
+  top: 1px;
+}
+
+.action-buttons .btn i.fa-edit {
+  position: relative;
+  top: 0px;
+}
+
+.action-buttons .btn-primary {
+  color: rgb(46, 170, 220);
+  background-color: rgba(46, 170, 220, 0.1);
+  border: none;
+}
+
+.action-buttons .btn-primary:hover {
+  background-color: rgba(46, 170, 220, 0.15);
+}
+
+.action-buttons .btn-danger {
+  color: rgb(235, 87, 87);
+  background-color: rgba(235, 87, 87, 0.1);
+  border: none;
+}
+
+.action-buttons .btn-danger:hover {
+  background-color: rgba(235, 87, 87, 0.15);
+}
+
+.action-buttons .btn-danger[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.action-buttons .btn-danger[disabled]:hover {
+  background-color: rgba(235, 87, 87, 0.1);
 }
 
 /* Table customization for Notion look */

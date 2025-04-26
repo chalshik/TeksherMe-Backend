@@ -137,18 +137,28 @@ const QuestionPackEditor = () => {
     }
   };
 
-  // Fix handleOptionKeyPress to navigate to the next option on Enter key press
+  // Handle keyboard navigation for option inputs in the add question form
   const handleOptionKeyPress = (e, index) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      // Find the next input and focus it
+      
+      // Check if this is the last option field with content
+      const isLastFilledOption = index === newQuestion.options.length - 1 && e.target.value.trim() !== '';
+      
+      // Find the next input
       const nextInput = document.querySelector(`#option-${index + 1}`);
+      
       if (nextInput) {
+        // If next input exists, focus it
         nextInput.focus();
-      } else {
-        // If no next option, add a new one
+      } else if (isLastFilledOption) {
+        // If there is no next input and this is the last filled option, add a new one
         handleAddOption();
         // Focus will be set in useEffect after the option is added
+      } else {
+        // If no next input but not a populated field, submit the form
+        const addButton = document.querySelector('button[type="submit"]');
+        if (addButton) addButton.focus();
       }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -165,18 +175,28 @@ const QuestionPackEditor = () => {
     }
   };
 
-  // Fix handleEditOptionKeyPress to navigate to the next option on Enter key press
+  // Handle keyboard navigation for option inputs in the edit question form
   const handleEditOptionKeyPress = (e, questionIndex, optionIndex) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      // Find the next input and focus it
+      
+      // Check if this is the last option field with content
+      const isLastFilledOption = optionIndex === editingQuestion.options.length - 1 && e.target.value.trim() !== '';
+      
+      // Find the next input
       const nextInput = document.querySelector(`#edit-option-${questionIndex}-${optionIndex + 1}`);
+      
       if (nextInput) {
+        // If next input exists, focus it
         nextInput.focus();
-      } else {
-        // If no next option, add a new one
-        handleAddEditOption(questionIndex);
+      } else if (isLastFilledOption) {
+        // If there is no next input and this is the last filled option, add a new one
+        handleAddEditOption();
         // Focus will be set in useEffect after the option is added
+      } else {
+        // If no next input but not a populated field, focus the update button
+        const updateButton = document.querySelector('.modal-footer .btn-primary');
+        if (updateButton) updateButton.focus();
       }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -193,7 +213,7 @@ const QuestionPackEditor = () => {
     }
   };
 
-  // Add use effect to focus on new option after adding
+  // Add use effect to focus on new option after adding to new question
   useEffect(() => {
     // Focus on newly added option
     const newOptionIndex = newQuestion.options.length - 1;
@@ -204,6 +224,19 @@ const QuestionPackEditor = () => {
       }
     }
   }, [newQuestion.options.length]);
+
+  // Add use effect to focus on new option after adding to edit question
+  useEffect(() => {
+    if (editingQuestion) {
+      const newOptionIndex = editingQuestion.options.length - 1;
+      if (newOptionIndex >= 0) {
+        const newOptionInput = document.querySelector(`#edit-option-${editingQuestionIndex}-${newOptionIndex}`);
+        if (newOptionInput) {
+          newOptionInput.focus();
+        }
+      }
+    }
+  }, [editingQuestion?.options.length, editingQuestionIndex]);
 
   // Add drag and drop functionality for questions
   const sensors = useSensors(
@@ -259,8 +292,12 @@ const QuestionPackEditor = () => {
           <div className="question-header">
             <h4>Question {index + 1}</h4>
             <div className="question-actions">
-              <button onClick={() => handleEditQuestion(index)}>Edit</button>
-              <button onClick={() => handleDeleteQuestion(index)}>Delete</button>
+              <button onClick={() => handleEditQuestion(index)} title="Edit Question">
+                <i className="fas fa-edit"></i>
+              </button>
+              <button onClick={() => handleDeleteQuestion(index)} title="Delete Question">
+                <i className="fas fa-trash-alt"></i>
+              </button>
             </div>
           </div>
           <p>{question.text}</p>
@@ -724,6 +761,7 @@ const QuestionPackEditor = () => {
               <div className="option-form-control">
                 <input
                   type="text"
+                  id={`option-${index}`}
                   className="form-control"
                   value={option.text}
                   onChange={(e) => handleOptionChange(index, e)}
@@ -753,15 +791,15 @@ const QuestionPackEditor = () => {
                 )}
               </div>
               
-              <button
-                type="button"
-                className="btn btn-danger btn-sm"
-                onClick={() => handleRemoveOption(index)}
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm"
+                  onClick={() => handleRemoveOption(index)}
                 disabled={newQuestion.options.length <= 2}
                 title={newQuestion.options.length <= 2 ? "At least 2 options are required" : ""}
-              >
-                <i className="fas fa-times"></i>
-              </button>
+                >
+                  <i className="fas fa-times"></i>
+                </button>
             </div>
           ))}
           
@@ -804,7 +842,7 @@ const QuestionPackEditor = () => {
                 ))}
               </SortableContext>
             </DndContext>
-          </div>
+                </div>
           </div>
         )}
       
@@ -844,6 +882,7 @@ const QuestionPackEditor = () => {
                       <div className="option-form-control">
                         <input
                           type="text"
+                          id={`edit-option-${editingQuestionIndex}-${index}`}
                           className="form-control"
                           value={option.text}
                           onChange={(e) => handleEditOptionChange(index, e)}
@@ -873,15 +912,15 @@ const QuestionPackEditor = () => {
                       )}
                       </div>
                       
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleRemoveEditOption(index)}
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleRemoveEditOption(index)}
                         disabled={editingQuestion.options.length <= 2}
                         title={editingQuestion.options.length <= 2 ? "At least 2 options are required" : ""}
-                      >
-                        <i className="fas fa-times"></i>
-                      </button>
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
                     </div>
                   ))}
                   

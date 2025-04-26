@@ -245,16 +245,17 @@ const Admin = () => {
                           <button
                             className="btn btn-primary btn-sm"
                             onClick={() => openEditCategoryModal(category)}
+                            title="Edit Category"
                           >
-                            <i className="fas fa-edit"></i> Edit
+                            <i className="fas fa-edit"></i>
                           </button>
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => handleDeleteCategory(category.id)}
                             disabled={packCount > 0}
-                            title={packCount > 0 ? "Delete associated question packs first" : ""}
+                            title={packCount > 0 ? "Delete associated question packs first" : "Delete Category"}
                           >
-                            <i className="fas fa-trash-alt"></i> Delete
+                            <i className="fas fa-trash-alt"></i>
                           </button>
                         </div>
                       </td>
@@ -369,14 +370,15 @@ const Admin = () => {
                     <td>{pack.questionCount || pack.questions?.length || 0}</td>
                     <td>
                       <div className="action-buttons">
-                        <Link to={`/admin/question-pack/${pack.id}`} className="btn btn-primary btn-sm">
-                          <i className="fas fa-edit"></i> Edit
+                        <Link to={`/admin/question-pack/${pack.id}`} className="btn btn-primary btn-sm" title="Edit Question Pack">
+                          <i className="fas fa-edit"></i>
                         </Link>
                         <button
                           className="btn btn-danger btn-sm"
                           onClick={() => handleDeleteQuestionPack(pack.id)}
+                          title="Delete Question Pack"
                         >
-                          <i className="fas fa-trash-alt"></i> Delete
+                          <i className="fas fa-trash-alt"></i>
                         </button>
                       </div>
                     </td>
