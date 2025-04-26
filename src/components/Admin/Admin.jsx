@@ -1,10 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { logout } from '../../firebase/auth'; // Update path if needed
 import { useNavigate } from 'react-router-dom'; // For redirection after logout
 import { Link } from 'react-router-dom';
-import { useCategories, useQuestionPacks, useCommercials } from '../../firebase/hooks';
+import { useCategories, useQuestionPacks, useCommercials, useTestAttempts } from '../../firebase/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Admin.css';
+import { 
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // Animation variants
 const pageTransition = {
@@ -53,12 +77,212 @@ const activityItemVariants = {
   }
 };
 
+// Analytics Component - Separate component for better organization
+const Analytics = ({ questionPacks, categories, testAttempts }) => {
+  console.log("Test Attempts Data:", testAttempts);
+  
+  // Create an empty map called testSetToUsers
+  // This will store testSetIds as keys and sets of userIds as values
+  const testSetToUsers = {};
+  
+  // Loop over each document from the query
+  testAttempts.forEach(attempt => {
+    // Only process documents where completed is true (should be all of them per the query)
+    // and where both questionPackId and userId are valid
+    if (attempt.completed && attempt.questionPackId && attempt.userId) {
+      const testSetId = attempt.questionPackId;
+      const userId = attempt.userId;
+      
+      // Check if testSetId exists in the map
+      if (!testSetToUsers[testSetId]) {
+        // If it does not exist, create a new empty Set for it
+        testSetToUsers[testSetId] = new Set();
+      }
+      
+      // Add the userId into the Set for that testSetId
+      // Sets automatically prevent duplicate userIds
+      testSetToUsers[testSetId].add(userId);
+    }
+  });
+  
+  // After looping through all documents, prepare the result
+  // For each testSetId, count how many unique users are in its Set
+  const uniqueUsersPerTestSet = {};
+  Object.keys(testSetToUsers).forEach(testSetId => {
+    // Count the number of unique users for this test set
+    uniqueUsersPerTestSet[testSetId] = testSetToUsers[testSetId].size;
+  });
+  
+  console.log("Unique Users Per Test Set:", uniqueUsersPerTestSet);
+  
+  // Extract the testSetIds and their counts
+  const packIds = Object.keys(uniqueUsersPerTestSet).filter(id => id); // Filter out empty IDs
+  
+  // Get pack details with names and counts of unique users
+  const packsWithDetails = packIds.map(id => {
+    const pack = questionPacks.find(p => p.id === id);
+    return {
+      id,
+      name: pack ? pack.name : `Pack ${id.substring(0, 6)}...`,
+      count: uniqueUsersPerTestSet[id],
+    };
+  });
+  
+  // Get the top 5 by unique user count and keep them in descending order
+  const chartData = [...packsWithDetails]
+    .sort((a, b) => b.count - a.count) // Sort by count (highest first)
+    .slice(0, 5); // Take top 5
+  
+  console.log("Final Chart Data (Unique Users):", chartData);
+  
+  // Check if we have data to display
+  const hasData = chartData.length > 0;
+  
+  // Final data for horizontal bar chart
+  const completionsData = {
+    labels: hasData ? chartData.map(item => item.name) : ['No Data Available'],
+    datasets: [
+      {
+        label: 'Unique Users Who Completed',
+        data: hasData ? chartData.map(item => item.count) : [0],
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(153, 102, 255, 0.8)',
+          'rgba(255, 159, 64, 0.8)',
+          'rgba(255, 99, 132, 0.8)',
+        ],
+        borderColor: [
+          'rgba(54, 162, 235, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)',
+        ],
+        borderWidth: 1,
+        borderRadius: 5,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    indexAxis: 'y', // This makes the bars horizontal
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false, // Hide legend as it's not needed for this visualization
+      },
+      title: {
+        display: true,
+        text: 'Number of Unique Users Who Completed Each Pack',
+        font: {
+          size: 16,
+          weight: 'bold'
+        }
+      },
+      tooltip: {
+        callbacks: {
+          title: (tooltipItems) => {
+            return tooltipItems[0].label;
+          },
+          label: (tooltipItem) => {
+            return `Unique Users: ${tooltipItem.raw}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Number of Unique Users'
+        },
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        grid: {
+          display: false
+        }
+      }
+    },
+    animation: {
+      duration: 1500,
+      easing: 'easeOutQuart'
+    }
+  };
+
+  return (
+    <div className="analytics-content">
+      <div className="stats-container">
+        <motion.div 
+          className="stat-card"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={0}
+          whileHover={{ y: -8, transition: { duration: 0.2 } }}
+        >
+          <div className="stat-value">{categories.length}</div>
+          <div className="stat-label">Categories</div>
+        </motion.div>
+        <motion.div 
+          className="stat-card"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={1}
+          whileHover={{ y: -8, transition: { duration: 0.2 } }}
+        >
+          <div className="stat-value">{questionPacks.length}</div>
+          <div className="stat-label">Question Packs</div>
+        </motion.div>
+        <motion.div 
+          className="stat-card"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={2}
+          whileHover={{ y: -8, transition: { duration: 0.2 } }}
+        >
+          <div className="stat-container">
+            <div className="stat-value">
+              {questionPacks.reduce((total, pack) => total + (pack.questionCount || 0), 0)}
+            </div>
+            <div className="stat-label">Total Questions</div>
+          </div>
+        </motion.div>
+      </div>
+      
+      <motion.div 
+        className="section analytics-section"
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        custom={3}
+      >
+        <h3>Unique Users per Pack</h3>
+        <div className="analytics-container">
+          <div className="chart-card full-width">
+            <div className="chart-container horizontal-bar-chart">
+              <Bar data={completionsData} options={chartOptions} />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const Admin = () => {
   const navigate = useNavigate();
   const [logoutError, setLogoutError] = useState(''); // Optional: for displaying logout errors
   
   // State
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('analytics');
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categoryFormData, setCategoryFormData] = useState({
     id: '',
@@ -123,8 +347,13 @@ const Admin = () => {
     removeCommercial
   } = useCommercials();
 
+  const {
+    testAttempts,
+    loading: testAttemptsLoading
+  } = useTestAttempts();
+
   // Loading state
-  const loading = categoriesLoading || packsLoading || commercialsLoading;
+  const loading = categoriesLoading || packsLoading || commercialsLoading || testAttemptsLoading;
 
   // Filter change handler
   const handleFilterChange = (e) => {
@@ -330,100 +559,25 @@ const Admin = () => {
     }
   };
 
-  // Render functions
-  const renderDashboard = () => {
+  // New Analytics section render function
+  const renderAnalytics = () => {
     return (
       <motion.div 
-        className="dashboard-container"
+        className="analytics-container-wrapper"
         variants={pageTransition}
         initial="hidden"
         animate="visible"
         exit="exit"
       >
-        <h2>Dashboard</h2>
-        
-        <div className="stats-container">
-          <motion.div 
-            className="stat-card"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            custom={0}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-          >
-            <div className="stat-value">{categories.length}</div>
-            <div className="stat-label">Categories</div>
-          </motion.div>
-          <motion.div 
-            className="stat-card"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            custom={1}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-          >
-            <div className="stat-value">{questionPacks.length}</div>
-            <div className="stat-label">Question Packs</div>
-          </motion.div>
-          <motion.div 
-            className="stat-card"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            custom={2}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-          >
-            <div className="stat-container">
-              <div className="stat-value">
-                {questionPacks.reduce((total, pack) => total + (pack.questionCount || 0), 0)}
-              </div>
-              <div className="stat-label">Total Questions</div>
-            </div>
-          </motion.div>
+        <div className="section-header">
+          <h2>Analytics Dashboard</h2>
         </div>
         
-        <motion.div 
-          className="section"
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          custom={3}
-        >
-          <h3>Recent Activity</h3>
-          <div className="activity-list">
-            {questionPacks.slice(0, 3).map((pack, index) => (
-              <motion.div 
-                className="activity-item" 
-                key={pack.id}
-                variants={activityItemVariants}
-                initial="hidden"
-                animate="visible"
-                whileHover="hover"
-                custom={index}
-              >
-                <div className="activity-icon">
-                  <i className="fas fa-file-alt"></i>
-                </div>
-                <div className="activity-content">
-                  <div className="activity-title">{pack.name}</div>
-                  <div className="activity-subtitle">{pack.categoryName} • {pack.questions?.length || 0} questions</div>
-                </div>
-              </motion.div>
-            ))}
-            {questionPacks.length === 0 && (
-              <motion.div 
-                className="activity-item"
-                variants={activityItemVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <div className="activity-content">
-                  <div className="activity-title">No recent activity</div>
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
+        <Analytics 
+          questionPacks={questionPacks} 
+          categories={categories} 
+          testAttempts={testAttempts} 
+        />
       </motion.div>
     );
   };
@@ -818,13 +972,13 @@ const Admin = () => {
         
         <div className="sidebar-nav">
           <motion.button 
-            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+            className={`nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.95 }}
           >
-            <i className="fas fa-chart-line"></i>
-            Dashboard
+            <i className="fas fa-chart-bar"></i>
+            Analytics
           </motion.button>
           
           <motion.button 
@@ -876,7 +1030,7 @@ const Admin = () => {
           <div className="loading-spinner"></div>
         ) : (
           <AnimatePresence mode="wait">
-            {activeTab === 'dashboard' && renderDashboard()}
+            {activeTab === 'analytics' && renderAnalytics()}
             {activeTab === 'categories' && renderCategories()}
             {activeTab === 'questionPacks' && renderQuestionPacks()}
             {activeTab === 'commercials' && renderCommercials()}

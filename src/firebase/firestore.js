@@ -837,4 +837,32 @@ export async function deleteCommercial(commercialId) {
     console.error("Error deleting commercial:", error);
     throw error;
   }
+}
+
+/**
+ * Load test attempts data for analytics
+ */
+export async function loadTestAttempts() {
+  try {
+    const testAttemptsRef = collection(db, "test_attempts");
+    // Only get documents where completed is true
+    const completedAttemptsQuery = query(testAttemptsRef, where("completed", "==", true));
+    const attemptsSnapshot = await getDocs(completedAttemptsQuery);
+    
+    const attemptsList = attemptsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        completed: data.completed || false,
+        questionPackId: data.question_packs || data.testSetId || '', // Check both possible field names
+        userId: data.userId || data.user_id || '' // Include userId field
+      };
+    });
+    
+    console.log("Loaded test attempts:", attemptsList);
+    return attemptsList;
+  } catch (error) {
+    console.error("Error loading test attempts:", error);
+    throw error;
+  }
 } 

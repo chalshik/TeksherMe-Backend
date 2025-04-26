@@ -18,7 +18,8 @@ import {
   getCommercial,
   saveCommercial,
   updateCommercial,
-  deleteCommercial
+  deleteCommercial,
+  loadTestAttempts
 } from './firestore';
 import {
   login as firebaseLogin,
@@ -495,5 +496,43 @@ export const useCommercials = () => {
     addCommercial,
     editCommercial,
     removeCommercial
+  };
+};
+
+/**
+ * Hook for test attempts analytics data
+ * @returns {Object} Test attempts data and loading state
+ */
+export const useTestAttempts = () => {
+  const [testAttempts, setTestAttempts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Load test attempts
+  const fetchTestAttempts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await loadTestAttempts();
+      setTestAttempts(data);
+      return data;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initialize test attempts
+  useEffect(() => {
+    fetchTestAttempts();
+  }, [fetchTestAttempts]);
+
+  return {
+    testAttempts,
+    loading,
+    error,
+    fetchTestAttempts
   };
 }; 
