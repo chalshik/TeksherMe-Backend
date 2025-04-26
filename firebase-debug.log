@@ -1,0 +1,127 @@
+[debug] [2025-04-26T16:00:23.169Z] ----------------------------------------------------------------------
+[debug] [2025-04-26T16:00:23.171Z] Command:       /usr/bin/node /usr/local/bin/firebase deploy --only hosting --debug
+[debug] [2025-04-26T16:00:23.172Z] CLI Version:   12.4.7
+[debug] [2025-04-26T16:00:23.172Z] Platform:      linux
+[debug] [2025-04-26T16:00:23.172Z] Node Version:  v18.19.1
+[debug] [2025-04-26T16:00:23.173Z] Time:          Sat Apr 26 2025 22:00:23 GMT+0600 (Киргизия)
+[debug] [2025-04-26T16:00:23.173Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-26T16:00:23.265Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-04-26T16:00:23.267Z] > authorizing via signed-in user (nurmuhammedkalmamatov06@gmail.com)
+[debug] [2025-04-26T16:00:23.267Z] [iam] checking project teksherme-3a2fe for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-04-26T16:00:23.270Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions [none]
+[debug] [2025-04-26T16:00:23.270Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions x-goog-quota-user=projects/teksherme-3a2fe
+[debug] [2025-04-26T16:00:23.270Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-04-26T16:00:24.554Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions 200
+[debug] [2025-04-26T16:00:24.555Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-04-26T16:00:24.559Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/teksherme-3a2fe [none]
+[debug] [2025-04-26T16:00:25.268Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/teksherme-3a2fe 200
+[debug] [2025-04-26T16:00:25.268Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/teksherme-3a2fe {"projectId":"teksherme-3a2fe","projectNumber":"520480110917","displayName":"TeksherMe","name":"projects/teksherme-3a2fe","resources":{"hostingSite":"teksherme-3a2fe"},"state":"ACTIVE","etag":"1_6d8ecf44-9549-41e6-8311-40761a8dd666"}
+[info] 
+[info] === Deploying to 'teksherme-3a2fe'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-04-26T16:00:25.281Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/versions [none]
+[debug] [2025-04-26T16:00:25.281Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-04-26T16:00:27.515Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/versions 200
+[debug] [2025-04-26T16:00:27.515Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/versions {"name":"projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[teksherme-3a2fe]: beginning deploy... 
+[info] i  hosting[teksherme-3a2fe]: found 19 files in build 
+[debug] [2025-04-26T16:00:27.531Z] [hosting] uploading with 200 concurrency
+[debug] [2025-04-26T16:00:27.533Z] [hosting] hash cache [YnVpbGQ] not populated
+[debug] [2025-04-26T16:00:28.667Z] [hosting] hash cache [YnVpbGQ] stored for 19 files
+[debug] [2025-04-26T16:00:28.668Z] [hosting][hash queue][FINAL] {"max":1126,"min":13,"avg":117.10526315789474,"active":0,"complete":19,"success":19,"errored":0,"retried":0,"total":19,"elapsed":1134}
+[debug] [2025-04-26T16:00:28.669Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af:populateFiles [none]
+[debug] [2025-04-26T16:00:28.669Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af:populateFiles {"files":{"/favicon.ico":"f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec","/asset-manifest.json":"afb16a40f5a7a06a9aeba11be4253459ffa972274461aeed6e06e8bbcb69c408","/manifest.json":"742dbfe6fdaf5cfce84ed0e9da6fcf24a1ac1fd03c5544ece35fd78623f4dda4","/index.html":"c1a7469d17e8e2ab12db55a42567c358b18cb7f24b8126b964765d361a5db990","/static/js/453.3f2572c4.chunk.js":"6d5c1484425bfb6d5f01724e8c01c784d9839cbc612cae9fc38e1490c3c5f99f","/static/js/453.3f2572c4.chunk.js.map":"0251559545f79f7f9d86b1fb56adc834131520ac7e1dcafe9e31b01b343ac1e7","/static/js/main.12b8ac66.js.LICENSE.txt":"95c4e6cd86127b34dd19af714a5db307ac1123d8d4300b8db188c974e2c325e1","/static/media/fa-v4compatibility.da94ef451f4969af06e6.ttf":"8e8349f7c568e0ba312c08f24099fed8db8c1256f6b051d979cb0019111683b5","/static/media/fa-v4compatibility.ea8f94e1d22e0d35ccd4.woff2":"78c50c1d80e174115acf0be1c87fa731b81c1d1756b3854d4a9c8ec69fc71c9f","/static/media/fa-regular-400.89999bdf5d835c012025.woff2":"08dd2d0a826ea5c462c2087ce7c2b45f6be3e97e383c6594be32147e2a7c6f2a","/static/media/fa-regular-400.914997e1bdfc990d0897.ttf":"58c67524c23e9f64c542cfceccd71466e681b9181349f6841aa4ac0753904769","/static/css/main.2fa596e2.css":"b98f95981e362c2bd8a9299c5e40bee88f23b3c4301654f52c334223d36363c3","/static/media/fa-brands-400.c210719e60948b211a12.woff2":"2350119187d4f32bc286518a1919df1a898608ef07328dc67bd80bffe745df44","/static/media/fa-solid-900.2463b90d9a316e4e5294.woff2":"e6867d5b14e5b2ab2e07f42d5dd8fbc762afcafe78afd300c929e32ed26b269b","/static/css/main.2fa596e2.css.map":"6e1bf1fa3a69a8b158ec864673ed7cfac3ef7057977ddac938473cdcaba93128","/static/media/fa-brands-400.1815e00441357e01619e.ttf":"ddb89cca333bd8ca35858f630035759a00b3324cdadc0ca5f09dbbf0c1de3efa","/static/media/fa-solid-900.2582b0e4bcf85eceead0.ttf":"8d8ab72343de5342f6239614775ec343488e090a3b15ef6adb892823ac061cbe","/static/js/main.12b8ac66.js":"db6695a9ebb69f7c16d71a9495f1744aa7d84eab8dfc52d5b32016ee64bbb88c","/static/js/main.12b8ac66.js.map":"24a4ccddd691ec3ba76442e0c2a08d9d0764e3fbba93271ca40e8353b14ad92e"}}
+[info] i  hosting: adding files to version [0/19] (0%) 
+[debug] [2025-04-26T16:00:30.177Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af:populateFiles 200
+[debug] [2025-04-26T16:00:30.177Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af:populateFiles {"uploadRequiredHashes":["c1a7469d17e8e2ab12db55a42567c358b18cb7f24b8126b964765d361a5db990"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/teksherme-3a2fe/versions/367d915ed4f4d5af/files"}
+[debug] [2025-04-26T16:00:30.179Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/teksherme-3a2fe/versions/367d915ed4f4d5af/files/c1a7469d17e8e2ab12db55a42567c358b18cb7f24b8126b964765d361a5db990 [none]
+[debug] [2025-04-26T16:00:30.179Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/teksherme-3a2fe/versions/367d915ed4f4d5af/files/c1a7469d17e8e2ab12db55a42567c358b18cb7f24b8126b964765d361a5db990 [stream]
+[debug] [2025-04-26T16:00:30.182Z] [hosting][populate queue][FINAL] {"max":1513,"min":1513,"avg":1513,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":1516}
+[debug] [2025-04-26T16:00:30.182Z] [hosting] uploads queued: 1
+[info] i  hosting: uploading new files [0/1] (0%) 
+[debug] [2025-04-26T16:00:32.424Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/teksherme-3a2fe/versions/367d915ed4f4d5af/files/c1a7469d17e8e2ab12db55a42567c358b18cb7f24b8126b964765d361a5db990 200
+[debug] [2025-04-26T16:00:32.425Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/teksherme-3a2fe/versions/367d915ed4f4d5af/files/c1a7469d17e8e2ab12db55a42567c358b18cb7f24b8126b964765d361a5db990 [stream]
+[debug] [2025-04-26T16:00:32.425Z] [hosting][upload queue][FINAL] {"max":2247,"min":2247,"avg":2247,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":2247}
+[info] i  hosting: upload complete 
+[info] ✔  hosting[teksherme-3a2fe]: file upload complete 
+[debug] [2025-04-26T16:00:32.426Z] [hosting] deploy completed after 4907ms
+[debug] [2025-04-26T16:00:32.426Z] [
+  {
+    "config": {
+      "public": "build",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "headers": [
+        {
+          "source": "/**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, no-store, must-revalidate"
+            }
+          ]
+        },
+        {
+          "source": "**/*.@(css|js)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "max-age=31536000"
+            }
+          ]
+        }
+      ],
+      "site": "teksherme-3a2fe"
+    },
+    "version": "projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af"
+  }
+]
+[info] i  hosting[teksherme-3a2fe]: finalizing version... 
+[debug] [2025-04-26T16:00:32.431Z] >>> [apiv2][query] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/versions/367d915ed4f4d5af updateMask=status%2Cconfig
+[debug] [2025-04-26T16:00:32.431Z] >>> [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/versions/367d915ed4f4d5af {"status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}],"headers":[{"glob":"/**","headers":{"Cache-Control":"no-cache, no-store, must-revalidate"}},{"glob":"**/*.@(css|js)","headers":{"Cache-Control":"max-age=31536000"}}]}}
+[debug] [2025-04-26T16:00:34.372Z] <<< [apiv2][status] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/versions/367d915ed4f4d5af 200
+[debug] [2025-04-26T16:00:34.373Z] <<< [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/versions/367d915ed4f4d5af {"name":"projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af","status":"FINALIZED","config":{"headers":[{"headers":{"Cache-Control":"no-cache, no-store, must-revalidate"},"glob":"/**"},{"headers":{"Cache-Control":"max-age=31536000"},"glob":"**/*.@(css|js)"}],"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2025-04-26T16:00:26.660189Z","createUser":{"email":"nurmuhammedkalmamatov06@gmail.com"},"finalizeTime":"2025-04-26T16:00:34.164782Z","finalizeUser":{"email":"nurmuhammedkalmamatov06@gmail.com"}}
+[debug] [2025-04-26T16:00:34.373Z] [hosting] finalized version for teksherme-3a2fe:[object Object]
+[info] ✔  hosting[teksherme-3a2fe]: version finalized 
+[info] i  hosting[teksherme-3a2fe]: releasing new version... 
+[debug] [2025-04-26T16:00:34.374Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/channels/live/releases versionName=projects%2F520480110917%2Fsites%2Fteksherme-3a2fe%2Fversions%2F367d915ed4f4d5af
+[debug] [2025-04-26T16:00:34.374Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/channels/live/releases {}
+[debug] [2025-04-26T16:00:35.600Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/channels/live/releases 200
+[debug] [2025-04-26T16:00:35.601Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/teksherme-3a2fe/channels/live/releases {"name":"projects/520480110917/sites/teksherme-3a2fe/channels/live/releases/1745683234923000","version":{"name":"projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af","status":"FINALIZED","config":{"headers":[{"headers":{"Cache-Control":"no-cache, no-store, must-revalidate"},"glob":"/**"},{"headers":{"Cache-Control":"max-age=31536000"},"glob":"**/*.@(css|js)"}],"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2025-04-26T16:00:26.660189Z","createUser":{"email":"nurmuhammedkalmamatov06@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocJDvKWjf5cij_qHX1wj2WeqA4-C4aUaNu6zWDqEHYS3ss_VKEa_KA"},"finalizeTime":"2025-04-26T16:00:34.164782Z","finalizeUser":{"email":"nurmuhammedkalmamatov06@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocJDvKWjf5cij_qHX1wj2WeqA4-C4aUaNu6zWDqEHYS3ss_VKEa_KA"}},"type":"DEPLOY","releaseTime":"2025-04-26T16:00:34.923Z","releaseUser":{"email":"nurmuhammedkalmamatov06@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocJDvKWjf5cij_qHX1wj2WeqA4-C4aUaNu6zWDqEHYS3ss_VKEa_KA"}}
+[debug] [2025-04-26T16:00:35.601Z] [hosting] release: {"name":"projects/520480110917/sites/teksherme-3a2fe/channels/live/releases/1745683234923000","version":{"name":"projects/520480110917/sites/teksherme-3a2fe/versions/367d915ed4f4d5af","status":"FINALIZED","config":{"headers":[{"headers":{"Cache-Control":"no-cache, no-store, must-revalidate"},"glob":"/**"},{"headers":{"Cache-Control":"max-age=31536000"},"glob":"**/*.@(css|js)"}],"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2025-04-26T16:00:26.660189Z","createUser":{"email":"nurmuhammedkalmamatov06@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocJDvKWjf5cij_qHX1wj2WeqA4-C4aUaNu6zWDqEHYS3ss_VKEa_KA"},"finalizeTime":"2025-04-26T16:00:34.164782Z","finalizeUser":{"email":"nurmuhammedkalmamatov06@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocJDvKWjf5cij_qHX1wj2WeqA4-C4aUaNu6zWDqEHYS3ss_VKEa_KA"}},"type":"DEPLOY","releaseTime":"2025-04-26T16:00:34.923Z","releaseUser":{"email":"nurmuhammedkalmamatov06@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocJDvKWjf5cij_qHX1wj2WeqA4-C4aUaNu6zWDqEHYS3ss_VKEa_KA"}}
+[info] ✔  hosting[teksherme-3a2fe]: release complete 
+[info] 
+[info] ✔  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/teksherme-3a2fe/overview
+[info] Hosting URL: https://teksherme-3a2fe.web.app
+[debug] [2025-04-26T16:01:05.384Z] ----------------------------------------------------------------------
+[debug] [2025-04-26T16:01:05.386Z] Command:       /usr/bin/node /usr/local/bin/firebase hosting:disable
+[debug] [2025-04-26T16:01:05.387Z] CLI Version:   12.4.7
+[debug] [2025-04-26T16:01:05.387Z] Platform:      linux
+[debug] [2025-04-26T16:01:05.387Z] Node Version:  v18.19.1
+[debug] [2025-04-26T16:01:05.388Z] Time:          Sat Apr 26 2025 22:01:05 GMT+0600 (Киргизия)
+[debug] [2025-04-26T16:01:05.388Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-26T16:01:05.471Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-04-26T16:01:05.472Z] > authorizing via signed-in user (nurmuhammedkalmamatov06@gmail.com)
+[debug] [2025-04-26T16:01:05.472Z] [iam] checking project teksherme-3a2fe for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-04-26T16:01:05.474Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions [none]
+[debug] [2025-04-26T16:01:05.475Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions x-goog-quota-user=projects/teksherme-3a2fe
+[debug] [2025-04-26T16:01:05.475Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-04-26T16:01:06.577Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions 200
+[debug] [2025-04-26T16:01:06.578Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/teksherme-3a2fe:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-04-26T16:01:06.580Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/teksherme-3a2fe [none]
+[debug] [2025-04-26T16:01:07.142Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/teksherme-3a2fe 200
+[debug] [2025-04-26T16:01:07.142Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/teksherme-3a2fe {"projectId":"teksherme-3a2fe","projectNumber":"520480110917","displayName":"TeksherMe","name":"projects/teksherme-3a2fe","resources":{"hostingSite":"teksherme-3a2fe"},"state":"ACTIVE","etag":"1_6d8ecf44-9549-41e6-8311-40761a8dd666"}
