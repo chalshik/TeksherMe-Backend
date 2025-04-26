@@ -45,12 +45,8 @@ function AnimatedRoutes() {
           </ProtectedRoute>
         } />
         
-        {/* Home route */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Admin />
-          </ProtectedRoute>
-        } />
+        {/* Home route - redirect to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         
         {/* Catch all - redirect to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
