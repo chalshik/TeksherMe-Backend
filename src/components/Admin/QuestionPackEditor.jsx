@@ -4,12 +4,16 @@ import { useCategories, useQuestionPacks } from '../../firebase/hooks';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import '../../styles/question-pack-editor.css';
 
 const QuestionPackEditor = () => {
   // Get pack ID from URL if editing existing pack
   const { packId } = useParams();
   const navigate = useNavigate();
   const isEditing = !!packId;
+
+  // Refs for difficulty select
+  const difficultySelectRef = useRef(null);
 
   // State variables
   const [packDetails, setPackDetails] = useState({
@@ -47,6 +51,54 @@ const QuestionPackEditor = () => {
 
   // Combined loading state
   const isLoading = categoriesLoading || questionPacksLoading;
+
+  // Setup drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Update difficulty select styling
+  useEffect(() => {
+    if (difficultySelectRef.current) {
+      // Remove all data-value attributes
+      difficultySelectRef.current.removeAttribute('data-value');
+      // Set the new data-value attribute
+      difficultySelectRef.current.setAttribute('data-value', packDetails.difficulty);
+      
+      // Update styling directly for immediate feedback
+      const selectElement = difficultySelectRef.current;
+      const difficultyValue = packDetails.difficulty;
+      
+      // Define colors based on difficulty
+      const colors = {
+        easy: {
+          bg: 'rgba(76, 175, 80, 0.08)',
+          border: '#4caf50'
+        },
+        medium: {
+          bg: 'rgba(255, 152, 0, 0.08)',
+          border: '#ff9800'
+        },
+        hard: {
+          bg: 'rgba(244, 67, 54, 0.08)',
+          border: '#f44336'
+        }
+      };
+      
+      // Apply styles
+      if (colors[difficultyValue]) {
+        selectElement.style.backgroundColor = colors[difficultyValue].bg;
+        selectElement.style.borderLeft = `3px solid ${colors[difficultyValue].border}`;
+      }
+    }
+  }, [packDetails.difficulty]);
 
   const fetchPackData = useCallback(async () => {
     if (!isEditing || !packId) return;
@@ -238,14 +290,7 @@ const QuestionPackEditor = () => {
     }
   }, [editingQuestion?.options.length, editingQuestionIndex]);
 
-  // Add drag and drop functionality for questions
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
+  // Drag and drop handler
   const handleDragEnd = (event) => {
     const { active, over } = event;
     
@@ -253,10 +298,9 @@ const QuestionPackEditor = () => {
       const oldIndex = packDetails.questions.findIndex(q => q.id === active.id);
       const newIndex = packDetails.questions.findIndex(q => q.id === over.id);
       
-      const updatedQuestions = arrayMove(packDetails.questions, oldIndex, newIndex);
       setPackDetails({
         ...packDetails,
-        questions: updatedQuestions
+        questions: arrayMove(packDetails.questions, oldIndex, newIndex)
       });
     }
   };
@@ -268,50 +312,66 @@ const QuestionPackEditor = () => {
       listeners,
       setNodeRef,
       transform,
-      transition
+      transition,
     } = useSortable({ id: question.id });
     
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      marginBottom: '10px',
-      cursor: 'grab'
     };
+    
+    // Find the correct option
+    const correctOption = question.options ? question.options.find(opt => opt.isCorrect) : null;
+    const hasCorrectOption = !!correctOption;
     
     return (
       <div 
         ref={setNodeRef} 
-        style={style} 
-        {...attributes} 
+        style={style}
         className="question-item"
       >
-        <div className="question-drag-handle" {...listeners}>
-          ⠿
+        <div className="question-drag-handle" {...attributes} {...listeners}>
+          <i className="fas fa-grip-vertical"></i>
         </div>
+        
         <div className="question-content">
           <div className="question-header">
             <h4>Question {index + 1}</h4>
             <div className="question-actions">
-              <button onClick={() => handleEditQuestion(index)} title="Edit Question">
+              <button 
+                type="button" 
+                onClick={() => handleEditQuestion(index)}
+                title="Edit Question"
+              >
                 <i className="fas fa-edit"></i>
               </button>
-              <button onClick={() => handleDeleteQuestion(index)} title="Delete Question">
+              <button 
+                type="button" 
+                onClick={() => handleDeleteQuestion(index)}
+                title="Delete Question"
+              >
                 <i className="fas fa-trash-alt"></i>
               </button>
             </div>
           </div>
+          
           <p>{question.text}</p>
-          <div className="options-list">
-            {question.options.map((option, optionIndex) => (
-              <div 
-                key={optionIndex} 
+          
+          <ul className="options-list">
+            {question.options && question.options.map((option, optIndex) => (
+              <li 
+                key={optIndex} 
                 className={`option ${option.isCorrect ? 'correct' : ''}`}
               >
+                {option.isCorrect && (
+                  <span className="correct-indicator">
+                    <i className="fas fa-check-circle"></i>
+                  </span>
+                )}
                 {option.text}
-                {option.isCorrect && <span className="correct-indicator"> ✓</span>}
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
     );
@@ -619,7 +679,7 @@ const QuestionPackEditor = () => {
             <i className="fas fa-arrow-left"></i> Back
           </button>
           <button 
-            className="btn btn-primary" 
+            className="btn btn-primary save-btn" 
             onClick={handleSavePack}
             disabled={isLoading}
           >
@@ -693,6 +753,8 @@ const QuestionPackEditor = () => {
                   className="form-control"
                   value={packDetails.difficulty}
                   onChange={handlePackDetailChange}
+                  ref={difficultySelectRef}
+                  data-value={packDetails.difficulty}
                 >
                   <option value="easy">Easy</option>
                   <option value="medium">Medium</option>
@@ -753,7 +815,10 @@ const QuestionPackEditor = () => {
           <h3>Options</h3>
           
           {newQuestion.options.map((option, index) => (
-            <div key={index} className="option-form-item">
+            <div 
+              key={index} 
+              className={`option-form-item ${option.isCorrect ? 'option-correct' : ''}`}
+            >
               <div className="option-number">
                 {index + 1}
               </div>
@@ -786,7 +851,7 @@ const QuestionPackEditor = () => {
                     className="option-correct-btn"
                     onClick={() => handleCorrectOptionChange(index)}
                   >
-                    Mark as Correct
+                    <i className="far fa-circle"></i> Mark as Correct
                   </button>
                 )}
               </div>
@@ -796,7 +861,7 @@ const QuestionPackEditor = () => {
                   className="btn btn-danger btn-sm"
                   onClick={() => handleRemoveOption(index)}
                 disabled={newQuestion.options.length <= 2}
-                title={newQuestion.options.length <= 2 ? "At least 2 options are required" : ""}
+                title={newQuestion.options.length <= 2 ? "At least 2 options are required" : "Remove option"}
                 >
                   <i className="fas fa-times"></i>
                 </button>
@@ -874,7 +939,10 @@ const QuestionPackEditor = () => {
                   <h3>Options</h3>
                   
                   {editingQuestion.options.map((option, index) => (
-                    <div key={index} className="option-form-item">
+                    <div 
+                      key={index} 
+                      className={`option-form-item ${option.isCorrect ? 'option-correct' : ''}`}
+                    >
                       <div className="option-number">
                         {index + 1}
                       </div>
@@ -907,7 +975,7 @@ const QuestionPackEditor = () => {
                             className="option-correct-btn"
                             onClick={() => handleEditCorrectOptionChange(index)}
                           >
-                            Mark as Correct
+                            <i className="far fa-circle"></i> Mark as Correct
                           </button>
                       )}
                       </div>
@@ -916,8 +984,8 @@ const QuestionPackEditor = () => {
                           type="button"
                           className="btn btn-danger btn-sm"
                           onClick={() => handleRemoveEditOption(index)}
-                        disabled={editingQuestion.options.length <= 2}
-                        title={editingQuestion.options.length <= 2 ? "At least 2 options are required" : ""}
+                          disabled={editingQuestion.options.length <= 2}
+                          title={editingQuestion.options.length <= 2 ? "At least 2 options are required" : "Remove option"}
                         >
                           <i className="fas fa-times"></i>
                         </button>
