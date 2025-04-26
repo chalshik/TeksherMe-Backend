@@ -19,7 +19,8 @@ import {
   saveCommercial,
   updateCommercial,
   deleteCommercial,
-  loadTestAttempts
+  loadTestAttempts,
+  loadUsers
 } from './firestore';
 import {
   login as firebaseLogin,
@@ -535,4 +536,32 @@ export const useTestAttempts = () => {
     error,
     fetchTestAttempts
   };
+};
+
+/**
+ * Hook for accessing users data
+ */
+export const useUsers = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const userData = await loadUsers();
+        setUsers(userData);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  return { users, loading, error };
 }; 

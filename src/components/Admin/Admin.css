@@ -27,9 +27,7 @@
   --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   --box-shadow-hover: 0 10px 25px rgba(33, 150, 243, 0.15);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-<<<<<<< HEAD
   --radius-sm: 4px;
-=======
   --card-bg: white;
   --color-text: black;
   --color-text-secondary: #6c757d;
@@ -38,7 +36,6 @@
   --color-blue: #2196f3;
   --color-purple: #7c4dff;
   --color-green: #00c853;
->>>>>>> 4b42466da55b1a23937b49b9553ee9524960cf26
 }
 
 /* General Styles */

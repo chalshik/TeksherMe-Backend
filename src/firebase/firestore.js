@@ -865,4 +865,27 @@ export async function loadTestAttempts() {
     console.error("Error loading test attempts:", error);
     throw error;
   }
+}
+
+/**
+ * Load users data for analytics
+ */
+export async function loadUsers() {
+  try {
+    const usersRef = collection(db, "users");
+    const usersSnapshot = await getDocs(usersRef);
+    
+    const usersList = usersSnapshot.docs.map(doc => {
+      return {
+        id: doc.id,
+        ...doc.data()
+      };
+    });
+    
+    console.log("Loaded users:", usersList.length);
+    return usersList;
+  } catch (error) {
+    console.error("Error loading users:", error);
+    throw error;
+  }
 } 

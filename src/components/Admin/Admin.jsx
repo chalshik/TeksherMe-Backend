@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { logout } from '../../firebase/auth'; // Update path if needed
 import { useNavigate } from 'react-router-dom'; // For redirection after logout
 import { Link } from 'react-router-dom';
-import { useCategories, useQuestionPacks, useCommercials, useTestAttempts } from '../../firebase/hooks';
+import { useCategories, useQuestionPacks, useCommercials, useTestAttempts, useUsers } from '../../firebase/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import { useTheme } from '../../context/ThemeContext';
@@ -80,12 +80,18 @@ const activityItemVariants = {
 };
 
 // Analytics Component - Separate component for better organization
-const Analytics = ({ questionPacks, categories, testAttempts }) => {
+const Analytics = ({ questionPacks, categories, testAttempts, users }) => {
   console.log("Test Attempts Data:", testAttempts);
+  console.log("Users Data:", users);
+  
+  const { theme } = useTheme();
   
   // Create an empty map called testSetToUsers
   // This will store testSetIds as keys and sets of userIds as values
   const testSetToUsers = {};
+  
+  // Set to store all unique user IDs
+  const allUniqueUsers = new Set();
   
   // Loop over each document from the query
   testAttempts.forEach(attempt => {
@@ -94,6 +100,11 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
     if (attempt.completed && attempt.questionPackId && attempt.userId) {
       const testSetId = attempt.questionPackId;
       const userId = attempt.userId;
+      
+      // Add to global unique users set
+      if (userId) {
+        allUniqueUsers.add(userId);
+      }
       
       // Check if testSetId exists in the map
       if (!testSetToUsers[testSetId]) {
@@ -106,6 +117,9 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
       testSetToUsers[testSetId].add(userId);
     }
   });
+  
+  // Total unique users count
+  const totalUniqueUsers = allUniqueUsers.size;
   
   // After looping through all documents, prepare the result
   // For each testSetId, count how many unique users are in its Set
@@ -181,7 +195,8 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
         font: {
           size: 16,
           weight: 'bold'
-        }
+        },
+        color: theme === 'dark' ? '#ffffff' : '#212529'
       },
       tooltip: {
         callbacks: {
@@ -191,7 +206,12 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
           label: (tooltipItem) => {
             return `Unique Users: ${tooltipItem.raw}`;
           }
-        }
+        },
+        backgroundColor: theme === 'dark' ? 'rgba(30, 30, 30, 0.8)' : 'rgba(0, 0, 0, 0.7)',
+        titleColor: theme === 'dark' ? '#ffffff' : '#ffffff',
+        bodyColor: theme === 'dark' ? '#e0e0e0' : '#ffffff',
+        borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1
       }
     },
     scales: {
@@ -199,15 +219,22 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Number of Unique Users'
+          text: 'Number of Unique Users',
+          color: theme === 'dark' ? '#e0e0e0' : '#666666'
         },
         grid: {
           display: false
+        },
+        ticks: {
+          color: theme === 'dark' ? '#e0e0e0' : '#666666'
         }
       },
       y: {
         grid: {
           display: false
+        },
+        ticks: {
+          color: theme === 'dark' ? '#e0e0e0' : '#666666'
         }
       }
     },
@@ -227,10 +254,17 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
           animate="visible"
           custom={0}
           whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          style={{
+            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+            color: theme === 'dark' ? '#ffffff' : '',
+            backgroundImage: theme === 'dark' ? 'none' : '',
+            borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+          }}
         >
-          <div className="stat-value">{categories.length}</div>
-          <div className="stat-label">Categories</div>
+          <div className="stat-value" style={{ color: theme === 'dark' ? '#2196f3' : '' }}>{users.length}</div>
+          <div className="stat-label" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '' }}>Registered Users</div>
         </motion.div>
+        
         <motion.div 
           className="stat-card"
           variants={cardVariants}
@@ -238,10 +272,17 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
           animate="visible"
           custom={1}
           whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          style={{
+            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+            color: theme === 'dark' ? '#ffffff' : '',
+            backgroundImage: theme === 'dark' ? 'none' : '',
+            borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+          }}
         >
-          <div className="stat-value">{questionPacks.length}</div>
-          <div className="stat-label">Question Packs</div>
+          <div className="stat-value" style={{ color: theme === 'dark' ? '#2196f3' : '' }}>{totalUniqueUsers}</div>
+          <div className="stat-label" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '' }}>Active Test Takers</div>
         </motion.div>
+        
         <motion.div 
           className="stat-card"
           variants={cardVariants}
@@ -249,12 +290,54 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
           animate="visible"
           custom={2}
           whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          style={{
+            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+            color: theme === 'dark' ? '#ffffff' : '',
+            backgroundImage: theme === 'dark' ? 'none' : '',
+            borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+          }}
+        >
+          <div className="stat-value" style={{ color: theme === 'dark' ? '#2196f3' : '' }}>{categories.length}</div>
+          <div className="stat-label" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '' }}>Categories</div>
+        </motion.div>
+        
+        <motion.div 
+          className="stat-card"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={3}
+          whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          style={{
+            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+            color: theme === 'dark' ? '#ffffff' : '',
+            backgroundImage: theme === 'dark' ? 'none' : '',
+            borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+          }}
+        >
+          <div className="stat-value" style={{ color: theme === 'dark' ? '#2196f3' : '' }}>{questionPacks.length}</div>
+          <div className="stat-label" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '' }}>Question Packs</div>
+        </motion.div>
+        
+        <motion.div 
+          className="stat-card"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={4}
+          whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          style={{
+            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+            color: theme === 'dark' ? '#ffffff' : '',
+            backgroundImage: theme === 'dark' ? 'none' : '',
+            borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+          }}
         >
           <div className="stat-container">
-            <div className="stat-value">
+            <div className="stat-value" style={{ color: theme === 'dark' ? '#2196f3' : '' }}>
               {questionPacks.reduce((total, pack) => total + (pack.questionCount || 0), 0)}
             </div>
-            <div className="stat-label">Total Questions</div>
+            <div className="stat-label" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '' }}>Total Questions</div>
           </div>
         </motion.div>
       </div>
@@ -264,12 +347,21 @@ const Analytics = ({ questionPacks, categories, testAttempts }) => {
         variants={cardVariants}
         initial="hidden"
         animate="visible"
-        custom={3}
+        custom={5}
+        style={{
+          backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+          color: theme === 'dark' ? '#ffffff' : '',
+          borderLeft: theme === 'dark' ? '3px solid #2196f3' : ''
+        }}
       >
-        <h3>Unique Users per Pack</h3>
+        <h3 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Unique Users per Pack</h3>
         <div className="analytics-container">
-          <div className="chart-card full-width">
-            <div className="chart-container horizontal-bar-chart">
+          <div className="chart-card full-width" style={{
+            backgroundColor: theme === 'dark' ? '#121212' : ''
+          }}>
+            <div className="chart-container horizontal-bar-chart" style={{
+              backgroundColor: theme === 'dark' ? 'rgba(18, 18, 18, 0.8)' : ''
+            }}>
               <Bar data={completionsData} options={chartOptions} />
             </div>
           </div>
@@ -355,8 +447,13 @@ const Admin = () => {
     loading: testAttemptsLoading
   } = useTestAttempts();
 
+  const {
+    users,
+    loading: usersLoading
+  } = useUsers();
+
   // Loading state
-  const loading = categoriesLoading || packsLoading || commercialsLoading || testAttemptsLoading;
+  const loading = categoriesLoading || packsLoading || commercialsLoading || testAttemptsLoading || usersLoading;
 
   // Filter change handler
   const handleFilterChange = (e) => {
@@ -575,152 +672,18 @@ const Admin = () => {
           backgroundColor: theme === 'dark' ? '#121212' : ''
         }}
       >
-<<<<<<< HEAD
-        <div className="section-header">
-          <h2>Analytics Dashboard</h2>
+        <div className="section-header" style={{
+          borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : ''
+        }}>
+          <h2 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Analytics Dashboard</h2>
         </div>
         
         <Analytics 
           questionPacks={questionPacks} 
           categories={categories} 
-          testAttempts={testAttempts} 
+          testAttempts={testAttempts}
+          users={users}
         />
-=======
-        <h2>Dashboard</h2>
-        
-        <div className="stats-container">
-          <motion.div 
-            className="stat-card"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            custom={0}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-            style={{
-              backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
-              color: theme === 'dark' ? '#ffffff' : '',
-              backgroundImage: theme === 'dark' ? 'none' : '',
-              borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
-            }}
-          >
-            <div className="stat-value">{categories.length}</div>
-            <div className="stat-label">Categories</div>
-          </motion.div>
-          <motion.div 
-            className="stat-card"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            custom={1}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-            style={{
-              backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
-              color: theme === 'dark' ? '#ffffff' : '',
-              backgroundImage: theme === 'dark' ? 'none' : '',
-              borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
-            }}
-          >
-            <div className="stat-value">{questionPacks.length}</div>
-            <div className="stat-label">Question Packs</div>
-          </motion.div>
-          <motion.div 
-            className="stat-card"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            custom={2}
-            whileHover={{ y: -8, transition: { duration: 0.2 } }}
-            style={{
-              backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
-              color: theme === 'dark' ? '#ffffff' : '',
-              backgroundImage: theme === 'dark' ? 'none' : '',
-              borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
-            }}
-          >
-            <div className="stat-container">
-              <div className="stat-value">
-                {questionPacks.reduce((total, pack) => {
-                  return total + (pack.questions ? pack.questions.length : 0);
-                }, 0)}
-              </div>
-              <div className="stat-label">Total Questions</div>
-            </div>
-          </motion.div>
-        </div>
-        
-        <motion.div 
-          className="section"
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          custom={3}
-          style={{
-            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
-            color: theme === 'dark' ? '#ffffff' : '',
-            backgroundImage: theme === 'dark' ? 'none' : '',
-            borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
-          }}
-        >
-          <h3>Recent Activity</h3>
-          <div className="activity-list">
-            {questionPacks.slice(0, 3).map((pack, index) => (
-              <motion.div 
-                className="activity-item" 
-                key={pack.id}
-                variants={activityItemVariants}
-                initial="hidden"
-                animate="visible"
-                whileHover="hover"
-                custom={index}
-                onClick={() => navigate(`/admin/question-pack/${pack.id}`)}
-                style={{ 
-                  cursor: 'pointer',
-                  backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff'
-                }}
-              >
-                <div className="activity-icon">
-                  <i className="fas fa-file-alt"></i>
-                </div>
-                <div className="activity-content">
-                  <div className="activity-title">{pack.name}</div>
-                  <div className="activity-subtitle">
-                    {pack.categoryName || 'Uncategorized'} • {pack.questions ? pack.questions.length : 0} questions
-                  </div>
-                  <div className="activity-timestamp">
-                    <i className="far fa-clock mr-1"></i>
-                    {(() => {
-                      try {
-                        if (pack.updatedAt) 
-                          return `Updated ${new Date(pack.updatedAt).toLocaleDateString()}`;
-                        else if (pack.createdAt)
-                          return `Created ${new Date(pack.createdAt).toLocaleDateString()}`;
-                        return '';
-                      } catch (e) {
-                        return '';
-                      }
-                    })()}
-                  </div>
-                </div>
-                <div className="activity-action">
-                  <i className="fas fa-chevron-right"></i>
-                </div>
-              </motion.div>
-            ))}
-            {questionPacks.length === 0 && (
-              <motion.div 
-                className="activity-item"
-                variants={activityItemVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <div className="activity-content">
-                  <div className="activity-title">No recent activity</div>
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
->>>>>>> 4b42466da55b1a23937b49b9553ee9524960cf26
       </motion.div>
     );
   };
@@ -1312,13 +1275,8 @@ const Admin = () => {
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.95 }}
           >
-<<<<<<< HEAD
             <i className="fas fa-chart-bar"></i>
             Analytics
-=======
-            <i className="fas fa-chart-line" style={{ color: 'inherit' }}></i>
-            Dashboard
->>>>>>> 4b42466da55b1a23937b49b9553ee9524960cf26
           </motion.button>
           
           <motion.button 
