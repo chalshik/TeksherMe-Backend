@@ -1,0 +1,104 @@
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  cursor: pointer;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--sidebar-text);
+  width: calc(100% - 16px);
+  margin: 20px auto 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.theme-toggle:active {
+  transform: translateY(0);
+}
+
+.toggle-track {
+  width: 50px;
+  height: 26px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 30px;
+  margin-right: 12px;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: background-color 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-indicator {
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s cubic-bezier(0.45, 1.8, 0.5, 0.75);
+  transform: translateX(0);
+}
+
+[data-theme="dark"] .toggle-indicator {
+  transform: translateX(24px);
+}
+
+.toggle-icon {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sun-icon {
+  color: #ffc107;
+}
+
+.moon-icon {
+  color: #5c6bc0;
+}
+
+.toggle-label {
+  font-weight: 500;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+/* Ensure the toggle works well in both light and dark themes */
+[data-theme="light"] .toggle-track {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .toggle-track {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .theme-toggle {
+    width: auto;
+    margin: 10px 0;
+  }
+  
+  .toggle-label {
+    display: none;
+  }
+  
+  .toggle-track {
+    margin-right: 0;
+  }
+} 

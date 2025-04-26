@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'; // For redirection after logout
 import { Link } from 'react-router-dom';
 import { useCategories, useQuestionPacks, useCommercials } from '../../firebase/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
+import { useTheme } from '../../context/ThemeContext';
 import './Admin.css';
 
 // Animation variants
@@ -56,6 +58,7 @@ const activityItemVariants = {
 const Admin = () => {
   const navigate = useNavigate();
   const [logoutError, setLogoutError] = useState(''); // Optional: for displaying logout errors
+  const { theme } = useTheme();
   
   // State
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -339,6 +342,9 @@ const Admin = () => {
         initial="hidden"
         animate="visible"
         exit="exit"
+        style={{
+          backgroundColor: theme === 'dark' ? '#121212' : ''
+        }}
       >
         <h2>Dashboard</h2>
         
@@ -350,6 +356,12 @@ const Admin = () => {
             animate="visible"
             custom={0}
             whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            style={{
+              backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+              color: theme === 'dark' ? '#ffffff' : '',
+              backgroundImage: theme === 'dark' ? 'none' : '',
+              borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+            }}
           >
             <div className="stat-value">{categories.length}</div>
             <div className="stat-label">Categories</div>
@@ -361,6 +373,12 @@ const Admin = () => {
             animate="visible"
             custom={1}
             whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            style={{
+              backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+              color: theme === 'dark' ? '#ffffff' : '',
+              backgroundImage: theme === 'dark' ? 'none' : '',
+              borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+            }}
           >
             <div className="stat-value">{questionPacks.length}</div>
             <div className="stat-label">Question Packs</div>
@@ -372,10 +390,18 @@ const Admin = () => {
             animate="visible"
             custom={2}
             whileHover={{ y: -8, transition: { duration: 0.2 } }}
+            style={{
+              backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+              color: theme === 'dark' ? '#ffffff' : '',
+              backgroundImage: theme === 'dark' ? 'none' : '',
+              borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+            }}
           >
             <div className="stat-container">
               <div className="stat-value">
-                {questionPacks.reduce((total, pack) => total + (pack.questionCount || 0), 0)}
+                {questionPacks.reduce((total, pack) => {
+                  return total + (pack.questions ? pack.questions.length : 0);
+                }, 0)}
               </div>
               <div className="stat-label">Total Questions</div>
             </div>
@@ -388,6 +414,12 @@ const Admin = () => {
           initial="hidden"
           animate="visible"
           custom={3}
+          style={{
+            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+            color: theme === 'dark' ? '#ffffff' : '',
+            backgroundImage: theme === 'dark' ? 'none' : '',
+            borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+          }}
         >
           <h3>Recent Activity</h3>
           <div className="activity-list">
@@ -400,13 +432,37 @@ const Admin = () => {
                 animate="visible"
                 whileHover="hover"
                 custom={index}
+                onClick={() => navigate(`/admin/question-pack/${pack.id}`)}
+                style={{ 
+                  cursor: 'pointer',
+                  backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff'
+                }}
               >
                 <div className="activity-icon">
                   <i className="fas fa-file-alt"></i>
                 </div>
                 <div className="activity-content">
                   <div className="activity-title">{pack.name}</div>
-                  <div className="activity-subtitle">{pack.categoryName} • {pack.questions?.length || 0} questions</div>
+                  <div className="activity-subtitle">
+                    {pack.categoryName || 'Uncategorized'} • {pack.questions ? pack.questions.length : 0} questions
+                  </div>
+                  <div className="activity-timestamp">
+                    <i className="far fa-clock mr-1"></i>
+                    {(() => {
+                      try {
+                        if (pack.updatedAt) 
+                          return `Updated ${new Date(pack.updatedAt).toLocaleDateString()}`;
+                        else if (pack.createdAt)
+                          return `Created ${new Date(pack.createdAt).toLocaleDateString()}`;
+                        return '';
+                      } catch (e) {
+                        return '';
+                      }
+                    })()}
+                  </div>
+                </div>
+                <div className="activity-action">
+                  <i className="fas fa-chevron-right"></i>
                 </div>
               </motion.div>
             ))}
@@ -436,42 +492,69 @@ const Admin = () => {
         initial="hidden"
         animate="visible"
         exit="exit"
+        style={{
+          backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+          color: theme === 'dark' ? '#ffffff' : ''
+        }}
       >
-        <div className="section-header">
-          <h2>Categories</h2>
+        <div className="section-header" style={{
+          borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : ''
+        }}>
+          <h2 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Categories</h2>
           <motion.button 
             className="btn btn-primary" 
             onClick={openAddCategoryModal}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            style={{
+              backgroundColor: theme === 'dark' ? '#2196f3' : ''
+            }}
           >
-            <i className="fas fa-plus"></i> Add Category
+            <i className="fas fa-plus" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i> Add Category
           </motion.button>
         </div>
         
         {error && <div className="alert alert-danger">{error}</div>}
         
         <div className="table-container">
-          <table className="data-table">
+          <table className="data-table" style={{
+            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+            color: theme === 'dark' ? '#ffffff' : ''
+          }}>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Question Packs</th>
-                <th>Actions</th>
+                <th style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+                }}>Name</th>
+                <th style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+                }}>Question Packs</th>
+                <th style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+                }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {categories.length === 0 ? (
                 <tr>
-                  <td colSpan="3" className="text-center">No categories found. Create your first one!</td>
+                  <td colSpan="3" className="text-center" style={{
+                    backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+                    color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : ''
+                  }}>No categories found. Create your first one!</td>
                 </tr>
               ) : (
                 categories.map(category => {
                   const packCount = questionPacks.filter(pack => pack.categoryId === category.id).length;
                   return (
-                    <tr key={category.id}>
-                      <td>{category.name}</td>
-                      <td>{packCount}</td>
+                    <tr key={category.id} style={{
+                      borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '',
+                      backgroundColor: theme === 'dark' ? '#1e1e1e' : ''
+                    }}>
+                      <td style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{category.name}</td>
+                      <td style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{packCount}</td>
                       <td>
                         <div className="action-buttons">
                           <motion.button
@@ -480,8 +563,11 @@ const Admin = () => {
                             title="Edit Category"
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
+                            style={{
+                              backgroundColor: theme === 'dark' ? '#2196f3' : ''
+                            }}
                           >
-                            <i className="fas fa-edit"></i>
+                            <i className="fas fa-edit" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
                           </motion.button>
                           <motion.button
                             className="btn btn-danger btn-sm"
@@ -490,8 +576,12 @@ const Admin = () => {
                             title={packCount > 0 ? "Delete associated question packs first" : "Delete Category"}
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
+                            style={{
+                              backgroundColor: theme === 'dark' ? '#ff5a5f' : '',
+                              opacity: packCount > 0 ? '0.5' : '1'
+                            }}
                           >
-                            <i className="fas fa-trash-alt"></i>
+                            <i className="fas fa-trash-alt" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
                           </motion.button>
                         </div>
                       </td>
@@ -523,26 +613,43 @@ const Admin = () => {
     });
     
     return (
-      <div className="question-packs-container">
-        <div className="section-header">
-          <h2>Question Packs</h2>
-          <Link to="/admin/question-pack" className="btn btn-primary">
-            <i className="fas fa-plus"></i> Add Question Pack
+      <div className="question-packs-container" style={{
+        backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+        color: theme === 'dark' ? '#ffffff' : ''
+      }}>
+        <div className="section-header" style={{
+          borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : ''
+        }}>
+          <h2 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Question Packs</h2>
+          <Link to="/admin/question-pack" className="btn btn-primary" style={{
+            backgroundColor: theme === 'dark' ? '#2196f3' : ''
+          }}>
+            <i className="fas fa-plus" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i> Add Question Pack
           </Link>
         </div>
         
         {error && <div className="alert alert-danger">{error}</div>}
         
-        <div className="filters-container">
+        <div className="filters-container" style={{
+          backgroundColor: theme === 'dark' ? '#1a1a1a' : '',
+          color: theme === 'dark' ? '#ffffff' : ''
+        }}>
           <div className="filter-row">
             <div className="filter-group">
-              <label htmlFor="categoryFilter">Category</label>
+              <label htmlFor="categoryFilter" style={{
+                color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+              }}>Category</label>
               <select
                 id="categoryFilter"
                 name="categoryId"
                 className="form-control"
                 value={packFilters.categoryId}
                 onChange={handleFilterChange}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? '#ffffff' : '',
+                  borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                }}
               >
                 <option value="">All Categories</option>
                 {categories.map(category => (
@@ -554,13 +661,20 @@ const Admin = () => {
             </div>
             
             <div className="filter-group">
-              <label htmlFor="difficultyFilter">Difficulty</label>
+              <label htmlFor="difficultyFilter" style={{
+                color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+              }}>Difficulty</label>
               <select
                 id="difficultyFilter"
                 name="difficulty"
                 className="form-control"
                 value={packFilters.difficulty}
                 onChange={handleFilterChange}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? '#ffffff' : '',
+                  borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                }}
               >
                 <option value="">All Difficulties</option>
                 <option value="easy">Easy</option>
@@ -570,28 +684,56 @@ const Admin = () => {
             </div>
             
             <div className="filter-group filter-actions">
-              <button className="btn btn-secondary" onClick={resetFilters}>
-                <i className="fas fa-undo"></i> Reset Filters
+              <button className="btn btn-secondary" 
+                onClick={resetFilters}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#333333' : '',
+                  color: theme === 'dark' ? '#ffffff' : '',
+                  borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                }}
+              >
+                <i className="fas fa-undo" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i> Reset Filters
               </button>
             </div>
           </div>
         </div>
         
         <div className="table-container">
-          <table className="data-table">
+          <table className="data-table" style={{
+            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+            color: theme === 'dark' ? '#ffffff' : ''
+          }}>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Difficulty</th>
-                <th>Questions</th>
-                <th>Actions</th>
+                <th style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+                }}>Name</th>
+                <th style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+                }}>Category</th>
+                <th style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+                }}>Difficulty</th>
+                <th style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+                }}>Questions</th>
+                <th style={{
+                  backgroundColor: theme === 'dark' ? '#121212' : '',
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : ''
+                }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredPacks.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center">
+                  <td colSpan="5" className="text-center" style={{
+                    backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+                    color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : ''
+                  }}>
                     {questionPacks.length === 0 
                       ? "No question packs found. Create your first one!"
                       : "No question packs match the selected filters."}
@@ -599,22 +741,48 @@ const Admin = () => {
                 </tr>
               ) : (
                 filteredPacks.map(pack => (
-                  <tr key={pack.id}>
-                    <td>{pack.name}</td>
-                    <td>{pack.categoryName}</td>
-                    <td style={{ textTransform: 'capitalize' }}>{pack.difficulty || 'N/A'}</td>
-                    <td>{pack.questionCount || pack.questions?.length || 0}</td>
+                  <tr key={pack.id} style={{
+                    borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '',
+                    backgroundColor: theme === 'dark' ? '#1e1e1e' : ''
+                  }}>
+                    <td style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{pack.name}</td>
+                    <td style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{pack.categoryName}</td>
+                    <td style={{ textTransform: 'capitalize', color: theme === 'dark' ? '#ffffff' : '' }}>
+                      {pack.difficulty || 'N/A'}
+                    </td>
+                    <td style={{ color: theme === 'dark' ? '#ffffff' : '' }}>
+                      {pack.questionCount || pack.questions?.length || 0}
+                    </td>
                     <td>
                       <div className="action-buttons">
-                        <Link to={`/admin/question-pack/${pack.id}`} className="btn btn-primary btn-sm" title="Edit Question Pack">
-                          <i className="fas fa-edit"></i>
+                        <Link 
+                          to={`/admin/question-pack/${pack.id}`} 
+                          className="btn btn-primary btn-sm" 
+                          title="Edit Question Pack"
+                          style={{
+                            backgroundColor: theme === 'dark' ? '#2196f3' : '',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '0.375rem 0.5rem'
+                          }}
+                        >
+                          <i className="fas fa-edit" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
                         </Link>
                         <button
                           className="btn btn-danger btn-sm"
                           onClick={() => handleDeleteQuestionPack(pack.id)}
                           title="Delete Question Pack"
+                          style={{
+                            backgroundColor: theme === 'dark' ? '#ff5a5f' : '',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '0.375rem 0.5rem',
+                            marginLeft: '0.5rem'
+                          }}
                         >
-                          <i className="fas fa-trash-alt"></i>
+                          <i className="fas fa-trash-alt" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
                         </button>
                       </div>
                     </td>
@@ -630,11 +798,18 @@ const Admin = () => {
 
   const renderCommercials = () => {
     return (
-      <div className="commercials-container">
-        <div className="section-header">
-          <h2>Commercials</h2>
-          <button className="btn btn-primary" onClick={openAddCommercialModal}>
-            <i className="fas fa-plus"></i> Add Commercial
+      <div className="commercials-container" style={{
+        backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+        color: theme === 'dark' ? '#ffffff' : ''
+      }}>
+        <div className="section-header" style={{
+          borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : ''
+        }}>
+          <h2 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Commercials</h2>
+          <button className="btn btn-primary" onClick={openAddCommercialModal} style={{
+            backgroundColor: theme === 'dark' ? '#2196f3' : ''
+          }}>
+            <i className="fas fa-plus" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i> Add Commercial
           </button>
         </div>
         
@@ -643,34 +818,47 @@ const Admin = () => {
         
         <div className="cards-container">
           {commercials.length === 0 ? (
-            <div className="empty-state">
+            <div className="empty-state" style={{
+              backgroundColor: theme === 'dark' ? '#1e1e1e' : ''
+            }}>
               <i className="fas fa-ad fa-3x"></i>
-              <p>No commercials found. Create your first one!</p>
+              <p style={{ color: theme === 'dark' ? '#ffffff' : '' }}>No commercials found. Create your first one!</p>
             </div>
           ) : (
             commercials.map(commercial => (
-              <div className="commercial-card" key={commercial.id}>
-                <div className="commercial-date">
+              <div className="commercial-card" key={commercial.id} style={{
+                backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+                borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+              }}>
+                <div className="commercial-date" style={{
+                  backgroundColor: theme === 'dark' ? '#2196f3' : ''
+                }}>
                   {commercial.date instanceof Date 
                     ? commercial.date.toLocaleDateString()
                     : new Date(commercial.date).toLocaleDateString()}
                 </div>
-                <h3 className="commercial-title">{commercial.title}</h3>
-                <p className="commercial-description">{commercial.description}</p>
+                <h3 className="commercial-title" style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{commercial.title}</h3>
+                <p className="commercial-description" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : '' }}>{commercial.description}</p>
                 <div className="commercial-actions">
                   <button
                     className="btn btn-primary btn-sm"
                     onClick={() => openEditCommercialModal(commercial)}
                     title="Edit Commercial"
+                    style={{
+                      backgroundColor: theme === 'dark' ? '#2196f3' : ''
+                    }}
                   >
-                    <i className="fas fa-edit"></i>
+                    <i className="fas fa-edit" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => handleDeleteCommercial(commercial.id)}
                     title="Delete Commercial"
+                    style={{
+                      backgroundColor: theme === 'dark' ? '#ff5a5f' : ''
+                    }}
                   >
-                    <i className="fas fa-trash-alt"></i>
+                    <i className="fas fa-trash-alt" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
                   </button>
                 </div>
               </div>
@@ -684,11 +872,16 @@ const Admin = () => {
   const renderCategoryModal = () => {
     return (
       <div className="modal-backdrop">
-        <div className="modal">
-          <div className="modal-header">
-            <h3>{categoryFormData.isEditing ? 'Edit Category' : 'Add Category'}</h3>
+        <div className="modal" style={{
+          backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+          color: theme === 'dark' ? '#ffffff' : ''
+        }}>
+          <div className="modal-header" style={{
+            borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : ''
+          }}>
+            <h3 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{categoryFormData.isEditing ? 'Edit Category' : 'Add Category'}</h3>
             <button className="close-button" onClick={closeCategoryModal}>
-              <i className="fas fa-times"></i>
+              <i className="fas fa-times" style={{ color: theme === 'dark' ? '#ffffff' : '' }}></i>
             </button>
           </div>
           
@@ -697,7 +890,9 @@ const Admin = () => {
             
             <form onSubmit={saveCategory}>
               <div className="form-group">
-                <label htmlFor="category-name" className="required-label">Category Name</label>
+                <label htmlFor="category-name" className="required-label" style={{ 
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : '' 
+                }}>Category Name</label>
                 <input
                   id="category-name"
                   name="name"
@@ -707,21 +902,36 @@ const Admin = () => {
                   onChange={handleCategoryFormChange}
                   required
                   placeholder="Enter category name"
+                  style={{
+                    backgroundColor: theme === 'dark' ? '#121212' : '',
+                    color: theme === 'dark' ? '#ffffff' : '',
+                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                  }}
                 />
               </div>
             </form>
           </div>
           
-          <div className="modal-footer">
+          <div className="modal-footer" style={{
+            borderTop: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : ''
+          }}>
             <button 
               className="btn btn-secondary" 
               onClick={closeCategoryModal}
+              style={{
+                backgroundColor: theme === 'dark' ? '#333333' : '',
+                color: theme === 'dark' ? '#ffffff' : '',
+                borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+              }}
             >
               Cancel
             </button>
             <button 
               className="btn btn-primary" 
               onClick={saveCategory}
+              style={{
+                backgroundColor: theme === 'dark' ? '#2196f3' : ''
+              }}
             >
               {categoryFormData.isEditing ? 'Update' : 'Save'}
             </button>
@@ -734,11 +944,16 @@ const Admin = () => {
   const renderCommercialModal = () => {
     return (
       <div className="modal-backdrop">
-        <div className="modal">
-          <div className="modal-header">
-            <h3>{commercialFormData.isEditing ? 'Edit Commercial' : 'Add Commercial'}</h3>
+        <div className="modal" style={{
+          backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
+          color: theme === 'dark' ? '#ffffff' : ''
+        }}>
+          <div className="modal-header" style={{
+            borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : ''
+          }}>
+            <h3 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{commercialFormData.isEditing ? 'Edit Commercial' : 'Add Commercial'}</h3>
             <button className="close-button" onClick={closeCommercialModal}>
-              <i className="fas fa-times"></i>
+              <i className="fas fa-times" style={{ color: theme === 'dark' ? '#ffffff' : '' }}></i>
             </button>
           </div>
           
@@ -748,7 +963,9 @@ const Admin = () => {
             
             <form onSubmit={saveCommercial}>
               <div className="form-group">
-                <label htmlFor="commercial-title" className="required-label">Title</label>
+                <label htmlFor="commercial-title" className="required-label" style={{ 
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : '' 
+                }}>Title</label>
                 <input
                   id="commercial-title"
                   name="title"
@@ -758,11 +975,18 @@ const Admin = () => {
                   onChange={handleCommercialFormChange}
                   required
                   placeholder="Enter commercial title"
+                  style={{
+                    backgroundColor: theme === 'dark' ? '#121212' : '',
+                    color: theme === 'dark' ? '#ffffff' : '',
+                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                  }}
                 />
               </div>
               
               <div className="form-group">
-                <label htmlFor="commercial-description" className="required-label">Description</label>
+                <label htmlFor="commercial-description" className="required-label" style={{ 
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : '' 
+                }}>Description</label>
                 <textarea
                   id="commercial-description"
                   name="description"
@@ -772,11 +996,18 @@ const Admin = () => {
                   required
                   placeholder="Enter commercial description"
                   rows="4"
+                  style={{
+                    backgroundColor: theme === 'dark' ? '#121212' : '',
+                    color: theme === 'dark' ? '#ffffff' : '',
+                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                  }}
                 ></textarea>
               </div>
               
               <div className="form-group">
-                <label htmlFor="commercial-date" className="required-label">Date</label>
+                <label htmlFor="commercial-date" className="required-label" style={{ 
+                  color: theme === 'dark' ? 'rgba(255, 255, 255, 0.85)' : '' 
+                }}>Date</label>
                 <input
                   id="commercial-date"
                   name="date"
@@ -785,21 +1016,36 @@ const Admin = () => {
                   value={commercialFormData.date}
                   onChange={handleCommercialFormChange}
                   required
+                  style={{
+                    backgroundColor: theme === 'dark' ? '#121212' : '',
+                    color: theme === 'dark' ? '#ffffff' : '',
+                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                  }}
                 />
               </div>
             </form>
           </div>
           
-          <div className="modal-footer">
+          <div className="modal-footer" style={{
+            borderTop: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.12)' : ''
+          }}>
             <button 
               className="btn btn-secondary" 
               onClick={closeCommercialModal}
+              style={{
+                backgroundColor: theme === 'dark' ? '#333333' : '',
+                color: theme === 'dark' ? '#ffffff' : '',
+                borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+              }}
             >
               Cancel
             </button>
             <button 
               className="btn btn-primary" 
               onClick={saveCommercial}
+              style={{
+                backgroundColor: theme === 'dark' ? '#2196f3' : ''
+              }}
             >
               {commercialFormData.isEditing ? 'Update' : 'Save'}
             </button>
@@ -810,7 +1056,9 @@ const Admin = () => {
   };
 
   return (
-    <div className="admin-container">
+    <div className="admin-container" style={{
+      backgroundColor: theme === 'dark' ? '#121212' : ''
+    }}>
       <div className="sidebar">
         <div className="sidebar-header">
           <h1>TeksherMe</h1>
@@ -823,7 +1071,7 @@ const Admin = () => {
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.95 }}
           >
-            <i className="fas fa-chart-line"></i>
+            <i className="fas fa-chart-line" style={{ color: 'inherit' }}></i>
             Dashboard
           </motion.button>
           
@@ -833,7 +1081,7 @@ const Admin = () => {
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.95 }}
           >
-            <i className="fas fa-folder"></i>
+            <i className="fas fa-folder" style={{ color: 'inherit' }}></i>
             Categories
           </motion.button>
           
@@ -843,7 +1091,7 @@ const Admin = () => {
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.95 }}
           >
-            <i className="fas fa-file-alt"></i>
+            <i className="fas fa-file-alt" style={{ color: 'inherit' }}></i>
             Question Packs
           </motion.button>
           
@@ -853,9 +1101,12 @@ const Admin = () => {
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.95 }}
           >
-            <i className="fas fa-ad"></i>
+            <i className="fas fa-ad" style={{ color: 'inherit' }}></i>
             Commercials
           </motion.button>
+          
+          {/* Theme Toggle */}
+          <ThemeToggle />
         </div>
         
         <motion.button 
@@ -864,7 +1115,7 @@ const Admin = () => {
           whileHover={{ y: -5 }}
           whileTap={{ scale: 0.95 }}
         >
-          <i className="fas fa-sign-out-alt"></i> Logout
+          <i className="fas fa-sign-out-alt" style={{ color: 'inherit' }}></i> Logout
         </motion.button>
         
         {logoutError && <div className="alert alert-danger">{logoutError}</div>}
