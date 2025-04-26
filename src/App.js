@@ -4,6 +4,7 @@ import QuestionPackEditor from './components/Admin/QuestionPackEditor';
 import Admin from './components/Admin/Admin';
 import Login from './components/Login/Login';
 import ProtectedRoute from './components/Login/ProtectedRoute';
+import { ThemeProvider } from './context/ThemeContext';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './styles'; // Import all styles through the index file
 
@@ -60,11 +61,13 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <AnimatedRoutes />
-      </div>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <div className="App">
+          <AnimatedRoutes />
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 }
 
