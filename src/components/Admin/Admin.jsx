@@ -3,7 +3,55 @@ import { logout } from '../../firebase/auth'; // Update path if needed
 import { useNavigate } from 'react-router-dom'; // For redirection after logout
 import { Link } from 'react-router-dom';
 import { useCategories, useQuestionPacks, useCommercials } from '../../firebase/hooks';
+import { motion, AnimatePresence } from 'framer-motion';
 import './Admin.css';
+
+// Animation variants
+const pageTransition = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    transition: { duration: 0.3, ease: "easeOut" }
+  },
+  exit: { 
+    opacity: 0, 
+    x: 20,
+    transition: { duration: 0.2, ease: "easeIn" }
+  }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (custom) => ({
+    opacity: 1,
+    y: 0,
+    transition: { 
+      duration: 0.4,
+      delay: custom * 0.1,
+      ease: "easeOut"
+    }
+  }),
+};
+
+const activityItemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: (custom) => ({
+    opacity: 1,
+    x: 0,
+    transition: { 
+      duration: 0.3,
+      delay: custom * 0.08,
+      ease: "easeOut"
+    }
+  }),
+  hover: { 
+    x: 5,
+    backgroundColor: "#f0f7ff",
+    borderLeft: "3px solid var(--color-blue)",
+    transition: { duration: 0.2 }
+  }
+};
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -285,33 +333,74 @@ const Admin = () => {
   // Render functions
   const renderDashboard = () => {
     return (
-      <div className="dashboard-container">
+      <motion.div 
+        className="dashboard-container"
+        variants={pageTransition}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+      >
         <h2>Dashboard</h2>
         
         <div className="stats-container">
-          <div className="stat-card">
+          <motion.div 
+            className="stat-card"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            custom={0}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          >
             <div className="stat-value">{categories.length}</div>
             <div className="stat-label">Categories</div>
-          </div>
-          <div className="stat-card">
+          </motion.div>
+          <motion.div 
+            className="stat-card"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            custom={1}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          >
             <div className="stat-value">{questionPacks.length}</div>
             <div className="stat-label">Question Packs</div>
-          </div>
-          <div className="stat-card">
+          </motion.div>
+          <motion.div 
+            className="stat-card"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            custom={2}
+            whileHover={{ y: -8, transition: { duration: 0.2 } }}
+          >
             <div className="stat-container">
               <div className="stat-value">
                 {questionPacks.reduce((total, pack) => total + (pack.questionCount || 0), 0)}
               </div>
               <div className="stat-label">Total Questions</div>
             </div>
-          </div>
+          </motion.div>
         </div>
         
-        <div className="section">
+        <motion.div 
+          className="section"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          custom={3}
+        >
           <h3>Recent Activity</h3>
           <div className="activity-list">
-            {questionPacks.slice(0, 3).map(pack => (
-              <div className="activity-item" key={pack.id}>
+            {questionPacks.slice(0, 3).map((pack, index) => (
+              <motion.div 
+                className="activity-item" 
+                key={pack.id}
+                variants={activityItemVariants}
+                initial="hidden"
+                animate="visible"
+                whileHover="hover"
+                custom={index}
+              >
                 <div className="activity-icon">
                   <i className="fas fa-file-alt"></i>
                 </div>
@@ -319,29 +408,45 @@ const Admin = () => {
                   <div className="activity-title">{pack.name}</div>
                   <div className="activity-subtitle">{pack.categoryName} • {pack.questions?.length || 0} questions</div>
                 </div>
-              </div>
+              </motion.div>
             ))}
             {questionPacks.length === 0 && (
-              <div className="activity-item">
+              <motion.div 
+                className="activity-item"
+                variants={activityItemVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 <div className="activity-content">
                   <div className="activity-title">No recent activity</div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   };
 
   const renderCategories = () => {
     return (
-      <div className="categories-container">
+      <motion.div 
+        className="categories-container"
+        variants={pageTransition}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+      >
         <div className="section-header">
           <h2>Categories</h2>
-          <button className="btn btn-primary" onClick={openAddCategoryModal}>
+          <motion.button 
+            className="btn btn-primary" 
+            onClick={openAddCategoryModal}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <i className="fas fa-plus"></i> Add Category
-          </button>
+          </motion.button>
         </div>
         
         {error && <div className="alert alert-danger">{error}</div>}
@@ -369,21 +474,25 @@ const Admin = () => {
                       <td>{packCount}</td>
                       <td>
                         <div className="action-buttons">
-                          <button
+                          <motion.button
                             className="btn btn-primary btn-sm"
                             onClick={() => openEditCategoryModal(category)}
                             title="Edit Category"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                           >
                             <i className="fas fa-edit"></i>
-                          </button>
-                          <button
+                          </motion.button>
+                          <motion.button
                             className="btn btn-danger btn-sm"
                             onClick={() => handleDeleteCategory(category.id)}
                             disabled={packCount > 0}
                             title={packCount > 0 ? "Delete associated question packs first" : "Delete Category"}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                           >
                             <i className="fas fa-trash-alt"></i>
-                          </button>
+                          </motion.button>
                         </div>
                       </td>
                     </tr>
@@ -393,7 +502,7 @@ const Admin = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -708,57 +817,70 @@ const Admin = () => {
         </div>
         
         <div className="sidebar-nav">
-          <button 
+          <motion.button 
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('dashboard')}
+            whileHover={{ x: 5 }}
+            whileTap={{ scale: 0.95 }}
           >
             <i className="fas fa-chart-line"></i>
             Dashboard
-          </button>
+          </motion.button>
           
-          <button 
+          <motion.button 
             className={`nav-item ${activeTab === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveTab('categories')}
+            whileHover={{ x: 5 }}
+            whileTap={{ scale: 0.95 }}
           >
             <i className="fas fa-folder"></i>
             Categories
-          </button>
+          </motion.button>
           
-          <button 
+          <motion.button 
             className={`nav-item ${activeTab === 'questionPacks' ? 'active' : ''}`}
             onClick={() => setActiveTab('questionPacks')}
+            whileHover={{ x: 5 }}
+            whileTap={{ scale: 0.95 }}
           >
             <i className="fas fa-file-alt"></i>
             Question Packs
-          </button>
+          </motion.button>
           
-          <button 
+          <motion.button 
             className={`nav-item ${activeTab === 'commercials' ? 'active' : ''}`}
             onClick={() => setActiveTab('commercials')}
+            whileHover={{ x: 5 }}
+            whileTap={{ scale: 0.95 }}
           >
             <i className="fas fa-ad"></i>
             Commercials
-          </button>
+          </motion.button>
         </div>
         
-        <button onClick={handleLogout} className="logout-button">
+        <motion.button 
+          onClick={handleLogout} 
+          className="logout-button"
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
+        >
           <i className="fas fa-sign-out-alt"></i> Logout
-        </button>
+        </motion.button>
         
         {logoutError && <div className="alert alert-danger">{logoutError}</div>}
       </div>
       
       <div className="main-content">
-        {/* Render the selected tab */}
+        {/* Render the selected tab with animation */}
         {loading ? (
           <div className="loading-spinner"></div>
         ) : (
-          <>
+          <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'categories' && renderCategories()}
             {activeTab === 'questionPacks' && renderQuestionPacks()}
             {activeTab === 'commercials' && renderCommercials()}
-          </>
+          </AnimatePresence>
         )}
       </div>
       
