@@ -13,7 +13,12 @@ import {
   getPackQuestions,
   addQuestionToPack,
   updatePackQuestion,
-  deletePackQuestion
+  deletePackQuestion,
+  loadCommercials,
+  getCommercial,
+  saveCommercial,
+  updateCommercial,
+  deleteCommercial
 } from './firestore';
 import {
   login as firebaseLogin,
@@ -380,5 +385,115 @@ export const useQuestions = (packId) => {
     addQuestion,
     updateQuestion,
     removeQuestion
+  };
+};
+
+/**
+ * Hook for commercials
+ * @returns {Object} Commercials data and functions
+ */
+export const useCommercials = () => {
+  const [commercials, setCommercials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Load commercials
+  const fetchCommercials = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await loadCommercials();
+      setCommercials(data);
+      return data;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initialize commercials
+  useEffect(() => {
+    fetchCommercials();
+  }, [fetchCommercials]);
+
+  // Get a specific commercial
+  const getCommercialById = async (commercialId) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getCommercial(commercialId);
+      return data;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add commercial
+  const addCommercial = async (commercialData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const newCommercial = await saveCommercial(commercialData);
+      setCommercials((prevCommercials) => [newCommercial, ...prevCommercials]);
+      return newCommercial;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update commercial
+  const editCommercial = async (commercialId, commercialData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const updatedCommercial = await updateCommercial(commercialId, commercialData);
+      setCommercials((prevCommercials) =>
+        prevCommercials.map((commercial) =>
+          commercial.id === commercialId ? { ...commercial, ...commercialData } : commercial
+        )
+      );
+      return updatedCommercial;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete commercial
+  const removeCommercial = async (commercialId) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await deleteCommercial(commercialId);
+      setCommercials((prevCommercials) =>
+        prevCommercials.filter((commercial) => commercial.id !== commercialId)
+      );
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    commercials,
+    loading,
+    error,
+    fetchCommercials,
+    getCommercialById,
+    addCommercial,
+    editCommercial,
+    removeCommercial
   };
 }; 

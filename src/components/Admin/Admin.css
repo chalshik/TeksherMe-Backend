@@ -1,0 +1,185 @@
+/* Admin.css */
+:root {
+  --primary: #2575fc;
+  --primary-light: #e8f0fe;
+  --primary-dark: #6a11cb;
+  --secondary: #5f6368;
+  --danger: #ea4335;
+  --success: #34a853;
+  --warning: #fbbc04;
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --box-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.15);
+  --transition: all 0.3s ease;
+}
+
+/* General Styles */
+.admin-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  font-family: var(--font-family);
+  color: var(--gray-800);
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, #6a11cb 0%, #2575fc 100%);
+  box-shadow: var(--box-shadow);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+/* ... existing styles ... */
+
+/* Categories & Question Packs & Commercials */
+.categories-container,
+.question-packs-container,
+.commercials-container {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 1.5rem;
+}
+
+/* Filter styles */
+.filters-container {
+  background-color: var(--gray-100);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--primary);
+}
+
+/* ... existing styles ... */
+
+/* Commercials Cards */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.commercial-card {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 1.5rem;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  border-top: 4px solid var(--primary);
+}
+
+.commercial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--box-shadow-hover);
+}
+
+.commercial-date {
+  background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+  color: white;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-weight: 500;
+}
+
+.commercial-title {
+  color: var(--primary-dark);
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+  padding-right: 4rem;
+  font-weight: 600;
+}
+
+.commercial-description {
+  color: var(--gray-700);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.commercial-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--gray-500);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-state i {
+  color: var(--primary-light);
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Success Alert */
+.alert-success {
+  background-color: rgba(52, 168, 83, 0.1);
+  color: var(--success);
+  border-left: 4px solid var(--success);
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+  
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .cards-container {
+    grid-template-columns: 1fr;
+  }
+} 

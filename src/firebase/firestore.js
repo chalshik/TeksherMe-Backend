@@ -22,6 +22,7 @@ const db = getFirestore(app);
 // Collection references
 const categoriesRef = collection(db, "categories");
 const questionPacksRef = collection(db, "question_packs");
+const commercialsRef = collection(db, "commercials");
 
 /**
  * Load all categories with pack counts
@@ -723,4 +724,117 @@ export const deletePackQuestion = async (packId, questionId) => {
     console.error('Error deleting pack question:', error);
     throw error;
   }
-}; 
+};
+
+/**
+ * Load all commercials
+ */
+export async function loadCommercials() {
+  try {
+    const commercialsQuery = query(commercialsRef, orderBy("date", "desc"));
+    const commercialsSnapshot = await getDocs(commercialsQuery);
+    
+    return commercialsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      // Convert Firestore timestamp to JavaScript Date for easier handling
+      date: doc.data().date?.toDate() || new Date()
+    }));
+  } catch (error) {
+    console.error("Error loading commercials:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get a specific commercial by ID
+ */
+export async function getCommercial(commercialId) {
+  try {
+    const commercialRef = doc(db, "commercials", commercialId);
+    const commercialSnapshot = await getDoc(commercialRef);
+    
+    if (!commercialSnapshot.exists()) {
+      throw new Error("Commercial not found");
+    }
+    
+    const data = commercialSnapshot.data();
+    return {
+      id: commercialSnapshot.id,
+      ...data,
+      date: data.date?.toDate() || new Date()
+    };
+  } catch (error) {
+    console.error("Error getting commercial:", error);
+    throw error;
+  }
+}
+
+/**
+ * Add a new commercial
+ */
+export async function saveCommercial(commercialData) {
+  try {
+    // Format date properly for Firestore
+    const dataToSave = {
+      ...commercialData,
+      date: new Date(commercialData.date),
+      createdAt: serverTimestamp()
+    };
+    
+    const docRef = await addDoc(commercialsRef, dataToSave);
+    
+    return {
+      id: docRef.id,
+      ...commercialData,
+      date: new Date(commercialData.date)
+    };
+  } catch (error) {
+    console.error("Error adding commercial:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update a commercial
+ */
+export async function updateCommercial(commercialId, updatedData) {
+  try {
+    const commercialRef = doc(db, "commercials", commercialId);
+    
+    // Format date if included
+    const dataToUpdate = { ...updatedData };
+    if (dataToUpdate.date) {
+      dataToUpdate.date = new Date(dataToUpdate.date);
+    }
+    
+    // Add timestamp
+    dataToUpdate.updatedAt = serverTimestamp();
+    
+    await updateDoc(commercialRef, dataToUpdate);
+    
+    return {
+      id: commercialId,
+      ...updatedData,
+      date: updatedData.date ? new Date(updatedData.date) : undefined
+    };
+  } catch (error) {
+    console.error("Error updating commercial:", error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a commercial
+ */
+export async function deleteCommercial(commercialId) {
+  try {
+    const commercialRef = doc(db, "commercials", commercialId);
+    await deleteDoc(commercialRef);
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting commercial:", error);
+    throw error;
+  }
+} 

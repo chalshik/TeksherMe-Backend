@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { logout } from '../../firebase/auth'; // Update path if needed
 import { useNavigate } from 'react-router-dom'; // For redirection after logout
 import { Link } from 'react-router-dom';
-import { useCategories, useQuestionPacks } from '../../firebase/hooks';
+import { useCategories, useQuestionPacks, useCommercials } from '../../firebase/hooks';
+import './Admin.css';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -17,11 +18,22 @@ const Admin = () => {
     isEditing: false
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   // Filter state for question packs
   const [packFilters, setPackFilters] = useState({
     categoryId: '',
     difficulty: ''
+  });
+  
+  // Commercial state
+  const [showCommercialModal, setShowCommercialModal] = useState(false);
+  const [commercialFormData, setCommercialFormData] = useState({
+    id: '',
+    title: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD
+    isEditing: false
   });
 
   // Handle logout function
@@ -54,9 +66,17 @@ const Admin = () => {
     loading: packsLoading,
     removeQuestionPack: deleteQuestionPack
   } = useQuestionPacks();
+  
+  const {
+    commercials,
+    loading: commercialsLoading,
+    addCommercial,
+    editCommercial,
+    removeCommercial
+  } = useCommercials();
 
   // Loading state
-  const loading = categoriesLoading || packsLoading;
+  const loading = categoriesLoading || packsLoading || commercialsLoading;
 
   // Filter change handler
   const handleFilterChange = (e) => {
@@ -151,6 +171,113 @@ const Admin = () => {
       } catch (error) {
         console.error('Error deleting question pack:', error);
         setError('Failed to delete question pack. Please try again.');
+      }
+    }
+  };
+
+  // Commercial functions
+  const openAddCommercialModal = () => {
+    setCommercialFormData({
+      id: '',
+      title: '',
+      description: '',
+      date: new Date().toISOString().split('T')[0],
+      isEditing: false
+    });
+    setShowCommercialModal(true);
+    setError('');
+    setSuccess('');
+  };
+
+  const openEditCommercialModal = (commercial) => {
+    // Format date as YYYY-MM-DD for the input
+    const formattedDate = commercial.date instanceof Date 
+      ? commercial.date.toISOString().split('T')[0]
+      : new Date(commercial.date).toISOString().split('T')[0];
+      
+    setCommercialFormData({
+      id: commercial.id,
+      title: commercial.title,
+      description: commercial.description,
+      date: formattedDate,
+      isEditing: true
+    });
+    setShowCommercialModal(true);
+    setError('');
+    setSuccess('');
+  };
+
+  const closeCommercialModal = () => {
+    setShowCommercialModal(false);
+  };
+
+  const handleCommercialFormChange = (e) => {
+    const { name, value } = e.target;
+    setCommercialFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const saveCommercial = async (e) => {
+    e.preventDefault();
+    
+    if (!commercialFormData.title.trim()) {
+      setError('Title is required');
+      return;
+    }
+    
+    if (!commercialFormData.description.trim()) {
+      setError('Description is required');
+      return;
+    }
+    
+    if (!commercialFormData.date) {
+      setError('Date is required');
+      return;
+    }
+    
+    try {
+      if (commercialFormData.isEditing) {
+        await editCommercial(commercialFormData.id, {
+          title: commercialFormData.title,
+          description: commercialFormData.description,
+          date: commercialFormData.date
+        });
+        setSuccess('Commercial updated successfully');
+      } else {
+        await addCommercial({
+          title: commercialFormData.title,
+          description: commercialFormData.description,
+          date: commercialFormData.date
+        });
+        setSuccess('Commercial added successfully');
+      }
+      
+      // Close modal after a short delay to show success message
+      setTimeout(() => {
+        closeCommercialModal();
+        setSuccess('');
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving commercial:', error);
+      setError('Failed to save commercial. Please try again.');
+    }
+  };
+
+  const handleDeleteCommercial = async (commercialId) => {
+    if (window.confirm('Are you sure you want to delete this commercial? This action cannot be undone.')) {
+      try {
+        await removeCommercial(commercialId);
+        setSuccess('Commercial deleted successfully');
+        
+        // Clear success message after a delay
+        setTimeout(() => {
+          setSuccess('');
+        }, 3000);
+      } catch (error) {
+        console.error('Error deleting commercial:', error);
+        setError('Failed to delete commercial. Please try again.');
       }
     }
   };
@@ -392,6 +519,59 @@ const Admin = () => {
     );
   };
 
+  const renderCommercials = () => {
+    return (
+      <div className="commercials-container">
+        <div className="section-header">
+          <h2>Commercials</h2>
+          <button className="btn btn-primary" onClick={openAddCommercialModal}>
+            <i className="fas fa-plus"></i> Add Commercial
+          </button>
+        </div>
+        
+        {error && <div className="alert alert-danger">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
+        
+        <div className="cards-container">
+          {commercials.length === 0 ? (
+            <div className="empty-state">
+              <i className="fas fa-ad fa-3x"></i>
+              <p>No commercials found. Create your first one!</p>
+            </div>
+          ) : (
+            commercials.map(commercial => (
+              <div className="commercial-card" key={commercial.id}>
+                <div className="commercial-date">
+                  {commercial.date instanceof Date 
+                    ? commercial.date.toLocaleDateString()
+                    : new Date(commercial.date).toLocaleDateString()}
+                </div>
+                <h3 className="commercial-title">{commercial.title}</h3>
+                <p className="commercial-description">{commercial.description}</p>
+                <div className="commercial-actions">
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => openEditCommercialModal(commercial)}
+                    title="Edit Commercial"
+                  >
+                    <i className="fas fa-edit"></i>
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDeleteCommercial(commercial.id)}
+                    title="Delete Commercial"
+                  >
+                    <i className="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderCategoryModal = () => {
     return (
       <div className="modal-backdrop">
@@ -442,6 +622,84 @@ const Admin = () => {
     );
   };
 
+  const renderCommercialModal = () => {
+    return (
+      <div className="modal-backdrop">
+        <div className="modal">
+          <div className="modal-header">
+            <h3>{commercialFormData.isEditing ? 'Edit Commercial' : 'Add Commercial'}</h3>
+            <button className="close-button" onClick={closeCommercialModal}>
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <div className="modal-body">
+            {error && <div className="alert alert-danger">{error}</div>}
+            {success && <div className="alert alert-success">{success}</div>}
+            
+            <form onSubmit={saveCommercial}>
+              <div className="form-group">
+                <label htmlFor="commercial-title" className="required-label">Title</label>
+                <input
+                  id="commercial-title"
+                  name="title"
+                  type="text"
+                  className="form-control"
+                  value={commercialFormData.title}
+                  onChange={handleCommercialFormChange}
+                  required
+                  placeholder="Enter commercial title"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="commercial-description" className="required-label">Description</label>
+                <textarea
+                  id="commercial-description"
+                  name="description"
+                  className="form-control"
+                  value={commercialFormData.description}
+                  onChange={handleCommercialFormChange}
+                  required
+                  placeholder="Enter commercial description"
+                  rows="4"
+                ></textarea>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="commercial-date" className="required-label">Date</label>
+                <input
+                  id="commercial-date"
+                  name="date"
+                  type="date"
+                  className="form-control"
+                  value={commercialFormData.date}
+                  onChange={handleCommercialFormChange}
+                  required
+                />
+              </div>
+            </form>
+          </div>
+          
+          <div className="modal-footer">
+            <button 
+              className="btn btn-secondary" 
+              onClick={closeCommercialModal}
+            >
+              Cancel
+            </button>
+            <button 
+              className="btn btn-primary" 
+              onClick={saveCommercial}
+            >
+              {commercialFormData.isEditing ? 'Update' : 'Save'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="admin-container">
       <div className="sidebar">
@@ -473,6 +731,14 @@ const Admin = () => {
             <i className="fas fa-file-alt"></i>
             Question Packs
           </button>
+          
+          <button 
+            className={`nav-item ${activeTab === 'commercials' ? 'active' : ''}`}
+            onClick={() => setActiveTab('commercials')}
+          >
+            <i className="fas fa-ad"></i>
+            Commercials
+          </button>
         </div>
         
         <button onClick={handleLogout} className="logout-button">
@@ -491,12 +757,14 @@ const Admin = () => {
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'categories' && renderCategories()}
             {activeTab === 'questionPacks' && renderQuestionPacks()}
+            {activeTab === 'commercials' && renderCommercials()}
           </>
         )}
       </div>
       
-      {/* Category Modal */}
+      {/* Modals */}
       {showCategoryModal && renderCategoryModal()}
+      {showCommercialModal && renderCommercialModal()}
     </div>
   );
 };
