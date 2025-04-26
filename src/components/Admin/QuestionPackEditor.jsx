@@ -80,29 +80,46 @@ const QuestionPackEditor = () => {
       const selectElement = difficultySelectRef.current;
       const difficultyValue = packDetails.difficulty;
       
-      // Define colors based on difficulty
+      // Define colors based on difficulty and theme
       const colors = {
-        easy: {
-          bg: 'rgba(76, 175, 80, 0.08)',
-          border: '#4caf50'
+        light: {
+          easy: {
+            bg: 'rgba(76, 175, 80, 0.08)',
+            border: '#4caf50'
+          },
+          medium: {
+            bg: 'rgba(255, 152, 0, 0.08)',
+            border: '#ff9800'
+          },
+          hard: {
+            bg: 'rgba(244, 67, 54, 0.08)',
+            border: '#f44336'
+          }
         },
-        medium: {
-          bg: 'rgba(255, 152, 0, 0.08)',
-          border: '#ff9800'
-        },
-        hard: {
-          bg: 'rgba(244, 67, 54, 0.08)',
-          border: '#f44336'
+        dark: {
+          easy: {
+            bg: 'rgba(76, 175, 80, 0.15)',
+            border: '#4caf50'
+          },
+          medium: {
+            bg: 'rgba(255, 152, 0, 0.15)',
+            border: '#ff9800'
+          },
+          hard: {
+            bg: 'rgba(244, 67, 54, 0.15)',
+            border: '#f44336'
+          }
         }
       };
       
-      // Apply styles
-      if (colors[difficultyValue]) {
-        selectElement.style.backgroundColor = colors[difficultyValue].bg;
-        selectElement.style.borderLeft = `3px solid ${colors[difficultyValue].border}`;
+      // Apply styles based on theme
+      const themeColors = colors[theme === 'dark' ? 'dark' : 'light'];
+      if (themeColors[difficultyValue]) {
+        selectElement.style.backgroundColor = themeColors[difficultyValue].bg;
+        selectElement.style.borderLeft = `3px solid ${themeColors[difficultyValue].border}`;
       }
     }
-  }, [packDetails.difficulty]);
+  }, [packDetails.difficulty, theme]);
 
   const fetchPackData = useCallback(async () => {
     if (!isEditing || !packId) return;
@@ -332,8 +349,10 @@ const QuestionPackEditor = () => {
         ref={setNodeRef} 
         style={{
           ...style,
-          backgroundColor: theme === 'dark' ? '#252525' : '#f8f8f8',
-          border: theme === 'dark' ? 'none' : '1px solid #dddddd'
+          backgroundColor: theme === 'dark' ? '#2d2d2d' : '#f8f8f8',
+          border: theme === 'dark' ? '1px solid #444444' : '1px solid #dddddd',
+          boxShadow: theme === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 1px 3px rgba(0, 0, 0, 0.05)',
+          borderLeft: theme === 'dark' ? '4px solid #2196f3' : '4px solid var(--primary)'
         }}
         className="question-item"
       >
@@ -341,9 +360,9 @@ const QuestionPackEditor = () => {
           className="question-drag-handle" 
           {...attributes} 
           {...listeners}
-          whileHover={{ color: "var(--primary)" }}
+          whileHover={{ color: theme === 'dark' ? "#2196f3" : "var(--primary)" }}
           style={{
-            color: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : '#666666'
+            color: theme === 'dark' ? 'rgba(255, 255, 255, 0.6)' : '#666666'
           }}
         >
           <i className="fas fa-grip-vertical"></i>
@@ -364,19 +383,25 @@ const QuestionPackEditor = () => {
                 type="button" 
                 onClick={() => handleEditQuestion(index)}
                 title="Edit Question"
-                whileHover={{ scale: 1.2, backgroundColor: "rgba(33, 150, 243, 0.1)" }}
+                whileHover={{ scale: 1.2, backgroundColor: theme === 'dark' ? "rgba(33, 150, 243, 0.2)" : "rgba(33, 150, 243, 0.1)" }}
                 whileTap={{ scale: 0.9 }}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#3a3a3a' : 'transparent'
+                }}
               >
-                <i className="fas fa-edit" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
+                <i className="fas fa-edit" style={{ color: theme === 'dark' ? '#2196f3' : '#333333' }}></i>
               </motion.button>
               <motion.button 
                 type="button" 
                 onClick={() => handleDeleteQuestion(index)}
                 title="Delete Question"
-                whileHover={{ scale: 1.2, backgroundColor: "rgba(255, 90, 95, 0.1)" }}
+                whileHover={{ scale: 1.2, backgroundColor: theme === 'dark' ? "rgba(255, 90, 95, 0.2)" : "rgba(255, 90, 95, 0.1)" }}
                 whileTap={{ scale: 0.9 }}
+                style={{
+                  backgroundColor: theme === 'dark' ? '#3a3a3a' : 'transparent'
+                }}
               >
-                <i className="fas fa-trash-alt" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
+                <i className="fas fa-trash-alt" style={{ color: theme === 'dark' ? '#ff5a5f' : '#333333' }}></i>
               </motion.button>
             </div>
           </div>
@@ -385,7 +410,7 @@ const QuestionPackEditor = () => {
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            style={{ color: theme === 'dark' ? '#FFFFFF' : '#333333' }}
+            style={{ color: theme === 'dark' ? '#EEEEEE' : '#333333' }}
           >
             {question.text}
           </motion.p>
@@ -400,12 +425,17 @@ const QuestionPackEditor = () => {
                 transition={{ delay: 0.2 + (optIndex * 0.07) }}
                 whileHover={{ 
                   y: -3, 
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                  boxShadow: theme === 'dark' ? "0 4px 12px rgba(0,0,0,0.3)" : "0 4px 8px rgba(0,0,0,0.1)",
                   transition: { type: "spring", stiffness: 400, damping: 17 }
                 }}
                 style={{
-                  backgroundColor: theme === 'dark' ? (option.isCorrect ? 'rgba(56, 142, 60, 0.3)' : '#333333') : '',
-                  color: theme === 'dark' ? '#ffffff' : '#333333'
+                  backgroundColor: theme === 'dark' 
+                    ? (option.isCorrect ? 'rgba(56, 142, 60, 0.3)' : '#3a3a3a') 
+                    : (option.isCorrect ? 'rgba(76, 175, 80, 0.1)' : '#ffffff'),
+                  color: theme === 'dark' ? '#ffffff' : '#333333',
+                  border: theme === 'dark' 
+                    ? (option.isCorrect ? '1px solid #4caf50' : '1px solid #555555') 
+                    : '1px solid #dddddd'
                 }}
               >
                 {option.isCorrect && (
@@ -415,7 +445,7 @@ const QuestionPackEditor = () => {
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 500, delay: 0.3 + (optIndex * 0.07) }}
                     style={{
-                      color: theme === 'dark' ? '#4caf50' : '#4caf50'
+                      color: theme === 'dark' ? '#76FF03' : '#4caf50'
                     }}
                   >
                     <i className="fas fa-check-circle"></i>
@@ -729,12 +759,15 @@ const QuestionPackEditor = () => {
   };
 
   return (
-    <div className="editor-container">
+    <div className="editor-container" style={{ 
+      backgroundColor: theme === 'dark' ? '#121212' : 'transparent',
+      color: theme === 'dark' ? '#EEEEEE' : 'var(--text-color)'
+    }}>
       <div className="container-fluid">
         <div className="row mb-4">
           <div className="col-12">
             <div className="editor-header" style={{
-              backgroundColor: theme === 'dark' ? '#1a1a1a' : '',
+              backgroundColor: theme === 'dark' ? '#171717' : '',
               borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : ''
             }}>
               <motion.h1 
@@ -742,7 +775,10 @@ const QuestionPackEditor = () => {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                style={{ color: theme === 'dark' ? '#ffffff' : '' }}
+                style={{ 
+                  color: theme === 'dark' ? '#ffffff' : '',
+                  WebkitTextFillColor: theme === 'dark' ? '#2196f3' : 'transparent'
+                }}
               >
                 {isEditing ? 'Edit Question Pack' : 'Create Question Pack'}
               </motion.h1>
@@ -753,9 +789,10 @@ const QuestionPackEditor = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   style={{
-                    backgroundColor: theme === 'dark' ? '#424242' : '',
+                    backgroundColor: theme === 'dark' ? '#333333' : '',
                     color: theme === 'dark' ? '#ffffff' : '',
-                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '',
+                    boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.3)' : ''
                   }}
                 >
                   <i className="fas fa-times mr-2"></i> Cancel
@@ -766,9 +803,10 @@ const QuestionPackEditor = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   style={{
-                    backgroundColor: theme === 'dark' ? '#388e3c' : '',
+                    background: theme === 'dark' ? 'linear-gradient(90deg, #2196f3, #3f51b5)' : '',
                     color: theme === 'dark' ? '#ffffff' : '',
-                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : ''
+                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '',
+                    boxShadow: theme === 'dark' ? '0 4px 12px rgba(33, 150, 243, 0.4)' : ''
                   }}
                 >
                   <i className="fas fa-save mr-2"></i> Save Question Pack
@@ -779,25 +817,32 @@ const QuestionPackEditor = () => {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="tabs">
+        <div className="tabs" style={{
+          backgroundColor: theme === 'dark' ? '#171717' : '',
+          borderRadius: '8px 8px 0 0',
+          padding: theme === 'dark' ? '4px 4px 0 4px' : ''
+        }}>
           <motion.button
             className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => handleTabChange('settings')}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.95 }}
             style={{
-              backgroundColor: theme === 'dark' ? '#2c3e50' : '#eef2f7',
+              backgroundColor: theme === 'dark' 
+                ? (activeTab === 'settings' ? '#2d2d2d' : '#1e1e1e') 
+                : (activeTab === 'settings' ? '#eef2f7' : '#f5f5f5'),
               color: theme === 'dark' ? '#ffffff' : '#333333',
               borderRadius: '6px 6px 0 0',
-              fontWeight: activeTab === 'settings' ? 'bold' : 'normal'
+              fontWeight: activeTab === 'settings' ? 'bold' : 'normal',
+              boxShadow: theme === 'dark' && activeTab === 'settings' ? '0 -2px 10px rgba(0, 0, 0, 0.2)' : 'none'
             }}
           >
-            <i className="fas fa-cog" style={{ color: activeTab === 'settings' ? (theme === 'dark' ? '#6366f1' : '#3b82f6') : 'inherit' }}></i> Settings
+            <i className="fas fa-cog" style={{ color: activeTab === 'settings' ? (theme === 'dark' ? '#2196f3' : '#3b82f6') : 'inherit' }}></i> Settings
             {activeTab === 'settings' && (
               <motion.div
                 className="tab-indicator"
                 layoutId="tab-indicator"
-                style={{ backgroundColor: theme === 'dark' ? '#6366f1' : '#3b82f6' }}
+                style={{ backgroundColor: theme === 'dark' ? '#2196f3' : '#3b82f6' }}
               />
             )}
           </motion.button>
@@ -808,18 +853,21 @@ const QuestionPackEditor = () => {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.95 }}
             style={{
-              backgroundColor: theme === 'dark' ? '#2c3e50' : '#eef2f7',
+              backgroundColor: theme === 'dark' 
+                ? (activeTab === 'questions' ? '#2d2d2d' : '#1e1e1e') 
+                : (activeTab === 'questions' ? '#eef2f7' : '#f5f5f5'),
               color: theme === 'dark' ? '#ffffff' : '#333333',
               borderRadius: '6px 6px 0 0',
-              fontWeight: activeTab === 'questions' ? 'bold' : 'normal'
+              fontWeight: activeTab === 'questions' ? 'bold' : 'normal',
+              boxShadow: theme === 'dark' && activeTab === 'questions' ? '0 -2px 10px rgba(0, 0, 0, 0.2)' : 'none'
             }}
           >
-            <i className="fas fa-question-circle" style={{ color: activeTab === 'questions' ? (theme === 'dark' ? '#6366f1' : '#3b82f6') : 'inherit' }}></i> Questions
+            <i className="fas fa-question-circle" style={{ color: activeTab === 'questions' ? (theme === 'dark' ? '#2196f3' : '#3b82f6') : 'inherit' }}></i> Questions
             {activeTab === 'questions' && (
               <motion.div
                 className="tab-indicator"
                 layoutId="tab-indicator"
-                style={{ backgroundColor: theme === 'dark' ? '#6366f1' : '#3b82f6' }}
+                style={{ backgroundColor: theme === 'dark' ? '#2196f3' : '#3b82f6' }}
               />
             )}
           </motion.button>
@@ -832,6 +880,11 @@ const QuestionPackEditor = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
+            style={{
+              backgroundColor: theme === 'dark' ? 'rgba(76, 175, 80, 0.2)' : '',
+              color: theme === 'dark' ? '#EEEEEE' : '',
+              border: theme === 'dark' ? '1px solid rgba(76, 175, 80, 0.5)' : ''
+            }}
           >
             {success}
           </motion.div>
@@ -843,6 +896,11 @@ const QuestionPackEditor = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
+            style={{
+              backgroundColor: theme === 'dark' ? 'rgba(244, 67, 54, 0.2)' : '',
+              color: theme === 'dark' ? '#EEEEEE' : '',
+              border: theme === 'dark' ? '1px solid rgba(244, 67, 54, 0.5)' : ''
+            }}
           >
             {error}
           </motion.div>
@@ -858,14 +916,27 @@ const QuestionPackEditor = () => {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
               className="tab-content"
+              style={{
+                backgroundColor: theme === 'dark' ? '#2d2d2d' : '',
+                borderRadius: '0 0 8px 8px',
+                boxShadow: theme === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : ''
+              }}
             >
               {/* Settings Section Layout Improvement */}
-              <div className="editor-card" style={{ backgroundColor: theme === 'dark' ? '#1D1D1D' : '#ffffff', border: theme === 'dark' ? '1px solid #333333' : '1px solid #cccccc' }}>
+              <div className="editor-card" style={{ 
+                backgroundColor: theme === 'dark' ? '#212121' : '#ffffff', 
+                border: theme === 'dark' ? '1px solid #444444' : '1px solid #cccccc',
+                boxShadow: theme === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '',
+                borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+              }}>
                 <div className="p-4">
                   <div className="row">
                     <div className="col-md-6">
                       <div className="form-group">
-                        <label htmlFor="pack-title" className="required-label" style={{ color: theme === 'dark' ? '#FFFFFF' : '#333333', fontWeight: theme === 'light' ? 'bold' : '' }}>Pack Title</label>
+                        <label htmlFor="pack-title" className="required-label" style={{ 
+                          color: theme === 'dark' ? '#BBDEFB' : '#333333', 
+                          fontWeight: 'bold' 
+                        }}>Pack Title</label>
                         <motion.input
                           type="text"
                           id="pack-title"
@@ -876,15 +947,18 @@ const QuestionPackEditor = () => {
                           placeholder="Enter a descriptive title"
                           whileFocus={{ boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.25)" }}
                           style={{
-                            backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                            color: theme === 'dark' ? '#ffffff' : '#333333',
-                            borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                            backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                            color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                            borderColor: theme === 'dark' ? '#555555' : '#999999'
                           }}
                         />
                       </div>
 
                       <div className="form-group">
-                        <label htmlFor="pack-description" style={{ color: theme === 'dark' ? '#FFFFFF' : '#333333', fontWeight: theme === 'light' ? 'bold' : '' }}>Description</label>
+                        <label htmlFor="pack-description" style={{ 
+                          color: theme === 'dark' ? '#BBDEFB' : '#333333', 
+                          fontWeight: 'bold' 
+                        }}>Description</label>
                         <motion.textarea
                           id="pack-description"
                           className="form-control"
@@ -894,9 +968,9 @@ const QuestionPackEditor = () => {
                           placeholder="Describe what this question pack is about"
                           whileFocus={{ boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.25)" }}
                           style={{
-                            backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                            color: theme === 'dark' ? '#ffffff' : '#333333',
-                            borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                            backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                            color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                            borderColor: theme === 'dark' ? '#555555' : '#999999'
                           }}
                         ></motion.textarea>
                       </div>
@@ -904,7 +978,10 @@ const QuestionPackEditor = () => {
 
                     <div className="col-md-6">
                       <div className="form-group">
-                        <label htmlFor="categoryId" className="required-label" style={{ color: theme === 'dark' ? '#FFFFFF' : '#333333', fontWeight: theme === 'light' ? 'bold' : '' }}>Category</label>
+                        <label htmlFor="categoryId" className="required-label" style={{ 
+                          color: theme === 'dark' ? '#BBDEFB' : '#333333', 
+                          fontWeight: 'bold' 
+                        }}>Category</label>
                         <select
                           id="categoryId"
                           name="categoryId"
@@ -913,9 +990,9 @@ const QuestionPackEditor = () => {
                           onChange={handlePackDetailChange}
                           required
                           style={{
-                            backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                            color: theme === 'dark' ? '#ffffff' : '#333333',
-                            borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                            backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                            color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                            borderColor: theme === 'dark' ? '#555555' : '#999999'
                           }}
                         >
                           <option value="" disabled>Select a category</option>
@@ -930,7 +1007,10 @@ const QuestionPackEditor = () => {
                       <div className="row">
                         <div className="col-md-6">
                           <div className="form-group">
-                            <label htmlFor="difficulty" style={{ color: theme === 'dark' ? '#FFFFFF' : '#333333', fontWeight: theme === 'light' ? 'bold' : '' }}>Difficulty Level</label>
+                            <label htmlFor="difficulty" style={{ 
+                              color: theme === 'dark' ? '#BBDEFB' : '#333333', 
+                              fontWeight: 'bold' 
+                            }}>Difficulty Level</label>
                             <select
                               id="difficulty"
                               name="difficulty"
@@ -940,9 +1020,9 @@ const QuestionPackEditor = () => {
                               ref={difficultySelectRef}
                               data-value={packDetails.difficulty}
                               style={{
-                                backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                                color: theme === 'dark' ? '#ffffff' : '#333333',
-                                borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                                backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                                color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                                borderColor: theme === 'dark' ? '#555555' : '#999999'
                               }}
                             >
                               <option value="easy">Easy</option>
@@ -954,7 +1034,10 @@ const QuestionPackEditor = () => {
 
                         <div className="col-md-6">
                           <div className="form-group">
-                            <label htmlFor="time" style={{ color: theme === 'dark' ? '#FFFFFF' : '#333333', fontWeight: theme === 'light' ? 'bold' : '' }}>Time Limit (minutes)</label>
+                            <label htmlFor="time" style={{ 
+                              color: theme === 'dark' ? '#BBDEFB' : '#333333', 
+                              fontWeight: 'bold' 
+                            }}>Time Limit (minutes)</label>
                             <input
                               type="number"
                               id="time"
@@ -965,9 +1048,9 @@ const QuestionPackEditor = () => {
                               min="1"
                               max="180"
                               style={{
-                                backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                                color: theme === 'dark' ? '#ffffff' : '#333333',
-                                borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                                backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                                color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                                borderColor: theme === 'dark' ? '#555555' : '#999999'
                               }}
                             />
                           </div>
@@ -976,28 +1059,29 @@ const QuestionPackEditor = () => {
                       
                       <div className="form-group mt-4">
                         <div className="card bg-light" style={{
-                          backgroundColor: theme === 'dark' ? '#222222' : '#f4f4f4',
-                          color: theme === 'dark' ? '#ffffff' : '#333333',
-                          borderColor: theme === 'dark' ? '#444444' : '#c0c0c0'
+                          backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f4f4f4',
+                          color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                          borderColor: theme === 'dark' ? '#444444' : '#c0c0c0',
+                          boxShadow: theme === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : ''
                         }}>
                           <div className="card-body">
                             <h5 className="card-title" style={{
-                              color: theme === 'dark' ? '#ffffff' : ''
+                              color: theme === 'dark' ? '#2196f3' : ''
                             }}>
                               <i className="fas fa-info-circle mr-2"></i>
                               Pack Summary
                             </h5>
                             <div className="d-flex justify-content-between mb-2">
-                              <span style={{ color: theme === 'dark' ? '#FFFFFF' : '' }}>Number of Questions:</span>
-                              <strong style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{packDetails.questions.length}</strong>
+                              <span style={{ color: theme === 'dark' ? '#BBDEFB' : '' }}>Number of Questions:</span>
+                              <strong style={{ color: theme === 'dark' ? '#EEEEEE' : '' }}>{packDetails.questions.length}</strong>
                             </div>
                             <div className="d-flex justify-content-between mb-2">
-                              <span style={{ color: theme === 'dark' ? '#FFFFFF' : '' }}>Category:</span>
-                              <strong style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{packDetails.categoryName || 'Not set'}</strong>
+                              <span style={{ color: theme === 'dark' ? '#BBDEFB' : '' }}>Category:</span>
+                              <strong style={{ color: theme === 'dark' ? '#EEEEEE' : '' }}>{packDetails.categoryName || 'Not set'}</strong>
                             </div>
                             <div className="d-flex justify-content-between">
-                              <span style={{ color: theme === 'dark' ? '#FFFFFF' : '' }}>Estimated Completion:</span>
-                              <strong style={{ color: theme === 'dark' ? '#ffffff' : '' }}>{packDetails.time} minutes</strong>
+                              <span style={{ color: theme === 'dark' ? '#BBDEFB' : '' }}>Estimated Completion:</span>
+                              <strong style={{ color: theme === 'dark' ? '#EEEEEE' : '' }}>{packDetails.time} minutes</strong>
                             </div>
                           </div>
                         </div>
@@ -1017,17 +1101,30 @@ const QuestionPackEditor = () => {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
               className="tab-content"
+              style={{
+                backgroundColor: theme === 'dark' ? '#2d2d2d' : '',
+                borderRadius: '0 0 8px 8px',
+                boxShadow: theme === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.3)' : ''
+              }}
             >
               {/* Questions Section Layout Improvement */}
               <div className="row">
                 {/* Add New Question Form Panel - Moved to top */}
                 <div className="col-md-12 mb-4">
-                  <div className="editor-card" style={{ backgroundColor: theme === 'dark' ? '#1D1D1D' : '#ffffff', border: theme === 'dark' ? '1px solid #333333' : '1px solid #cccccc' }}>
+                  <div className="editor-card" style={{ 
+                    backgroundColor: theme === 'dark' ? '#212121' : '#ffffff', 
+                    border: theme === 'dark' ? '1px solid #444444' : '1px solid #cccccc',
+                    boxShadow: theme === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '',
+                    borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+                  }}>
                     <form onSubmit={handleAddQuestion} className="p-3">
                       <div className="row">
                         <div className="col-md-8">
                           <div className="form-group">
-                            <label htmlFor="question-text" className="required-label" style={{ color: theme === 'dark' ? '#FFFFFF' : '#333333', fontWeight: theme === 'light' ? 'bold' : '' }}>Question</label>
+                            <label htmlFor="question-text" className="required-label" style={{ 
+                              color: theme === 'dark' ? '#BBDEFB' : '#333333', 
+                              fontWeight: 'bold' 
+                            }}>Question</label>
                             <motion.textarea
                               id="question-text"
                               className="form-control"
@@ -1038,9 +1135,9 @@ const QuestionPackEditor = () => {
                               rows="3"
                               whileFocus={{ boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.25)" }}
                               style={{
-                                backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                                color: theme === 'dark' ? '#ffffff' : '#333333',
-                                borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                                backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                                color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                                borderColor: theme === 'dark' ? '#555555' : '#999999'
                               }}
                             ></motion.textarea>
                           </div>
@@ -1051,7 +1148,10 @@ const QuestionPackEditor = () => {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.1 }}
-                            style={{ color: theme === 'dark' ? '#ffffff' : '#333333', fontWeight: 'bold' }}
+                            style={{ 
+                              color: theme === 'dark' ? '#BBDEFB' : '#333333', 
+                              fontWeight: 'bold' 
+                            }}
                           >
                             Options <small className="text-muted" style={{ color: theme === 'dark' ? '#CCCCCC' : '#666666' }}>
                               (at least 2 required)
@@ -1068,13 +1168,23 @@ const QuestionPackEditor = () => {
                                 exit={{ opacity: 0, y: -20, height: 0 }}
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
                                 layout
-                                style={{ backgroundColor: theme === 'dark' ? '#333333' : '#f8f8f8', border: theme === 'dark' ? 'none' : '1px solid #e0e0e0' }}
+                                style={{ 
+                                  backgroundColor: theme === 'dark' 
+                                    ? (option.isCorrect ? 'rgba(76, 175, 80, 0.15)' : '#333333') 
+                                    : (option.isCorrect ? 'rgba(76, 175, 80, 0.08)' : '#f8f8f8'),
+                                  border: theme === 'dark' 
+                                    ? (option.isCorrect ? '1px solid #4caf50' : '1px solid #444444') 
+                                    : '1px solid #e0e0e0',
+                                  boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.2)' : ''
+                                }}
                               >
                                 <motion.div 
                                   className="option-number"
                                   whileHover={{ scale: 1.1 }}
                                   style={{ 
-                                    backgroundColor: theme === 'dark' ? '#444444' : '#e0e0e0',
+                                    backgroundColor: theme === 'dark' 
+                                      ? (option.isCorrect ? '#388e3c' : '#444444') 
+                                      : (option.isCorrect ? '#4caf50' : '#e0e0e0'),
                                     color: theme === 'dark' ? '#ffffff' : '#333333'
                                   }}
                                 >
@@ -1093,9 +1203,9 @@ const QuestionPackEditor = () => {
                                     required={index < 2}
                                     whileFocus={{ boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.25)" }}
                                     style={{
-                                      backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                                      color: theme === 'dark' ? '#ffffff' : '#333333',
-                                      borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                                      backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                                      color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                                      borderColor: theme === 'dark' ? '#555555' : '#999999'
                                     }}
                                   />
                                 </div>
@@ -1111,7 +1221,8 @@ const QuestionPackEditor = () => {
                                       style={{
                                         backgroundColor: theme === 'dark' ? '#388e3c' : '#4caf50',
                                         color: theme === 'dark' ? '#ffffff' : '#ffffff',
-                                        borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#43a047'
+                                        borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#43a047',
+                                        boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.3)' : ''
                                       }}
                                     >
                                       <i className="fas fa-check-circle"></i> Correct
@@ -1124,9 +1235,10 @@ const QuestionPackEditor = () => {
                                       whileHover={{ scale: 1.03 }}
                                       whileTap={{ scale: 0.97 }}
                                       style={{
-                                        backgroundColor: theme === 'dark' ? '#333333' : '#f0f0f0',
-                                        color: theme === 'dark' ? '#ffffff' : '#666666',
-                                        borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#dddddd'
+                                        backgroundColor: theme === 'dark' ? '#2a2a2a' : '#f0f0f0',
+                                        color: theme === 'dark' ? '#BBBBBB' : '#666666',
+                                        borderColor: theme === 'dark' ? '#444444' : '#dddddd',
+                                        boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.2)' : ''
                                       }}
                                     >
                                       <i className="far fa-circle"></i> Mark Correct
@@ -1145,7 +1257,8 @@ const QuestionPackEditor = () => {
                                   style={{
                                     backgroundColor: theme === 'dark' ? '#d32f2f' : '#f44336',
                                     color: theme === 'dark' ? '#ffffff' : '#ffffff',
-                                    opacity: newQuestion.options.length <= 2 ? '0.5' : '1'
+                                    opacity: newQuestion.options.length <= 2 ? '0.5' : '1',
+                                    boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.3)' : ''
                                   }}
                                 >
                                   <i className="fas fa-times"></i>
@@ -1163,7 +1276,8 @@ const QuestionPackEditor = () => {
                               whileTap={{ scale: 0.97 }}
                               style={{
                                 borderColor: theme === 'dark' ? '#2196f3' : '#2196f3',
-                                color: theme === 'dark' ? '#2196f3' : '#2196f3'
+                                color: theme === 'dark' ? '#2196f3' : '#2196f3',
+                                backgroundColor: theme === 'dark' ? 'rgba(33, 150, 243, 0.05)' : ''
                               }}
                             >
                               <i className="fas fa-plus"></i> Add Option
@@ -1178,17 +1292,24 @@ const QuestionPackEditor = () => {
                           className="btn btn-success w-100"
                           whileHover={{ 
                             y: -3, 
-                            boxShadow: "0 4px 8px rgba(0, 200, 83, 0.3)",
+                            boxShadow: theme === 'dark' 
+                              ? "0 6px 12px rgba(33, 150, 243, 0.4)" 
+                              : "0 4px 8px rgba(0, 200, 83, 0.3)",
                             transition: { type: "spring", stiffness: 400 }
                           }}
                           whileTap={{ 
                             y: 0, 
-                            boxShadow: "0 2px 4px rgba(0, 200, 83, 0.2)" 
+                            boxShadow: theme === 'dark' 
+                              ? "0 2px 6px rgba(33, 150, 243, 0.3)" 
+                              : "0 2px 4px rgba(0, 200, 83, 0.2)" 
                           }}
                           style={{
-                            backgroundColor: theme === 'dark' ? '#388e3c' : '#28a745',
+                            background: theme === 'dark' 
+                              ? 'linear-gradient(90deg, #2196f3, #3f51b5)' 
+                              : '#28a745',
                             color: theme === 'dark' ? '#ffffff' : '#ffffff',
-                            borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#218838'
+                            borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#218838',
+                            boxShadow: theme === 'dark' ? '0 4px 10px rgba(33, 150, 243, 0.3)' : ''
                           }}
                         >
                           <i className="fas fa-plus-circle mr-2"></i> Add Question
@@ -1200,16 +1321,23 @@ const QuestionPackEditor = () => {
 
                 {/* Questions List Panel - Now below add form */}
                 <div className="col-md-12">
-                  <div className="editor-card mb-4" style={{ backgroundColor: theme === 'dark' ? '#1D1D1D' : '#ffffff', border: theme === 'dark' ? '1px solid #333333' : '1px solid #cccccc' }}>
+                  <div className="editor-card mb-4" style={{ 
+                    backgroundColor: theme === 'dark' ? '#212121' : '#ffffff', 
+                    border: theme === 'dark' ? '1px solid #444444' : '1px solid #cccccc',
+                    boxShadow: theme === 'dark' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '',
+                    borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
+                  }}>
                     <div className="questions-list">
                       {packDetails.questions.length === 0 ? (
                         <div className="empty-state text-center p-4" style={{
-                          backgroundColor: theme === 'dark' ? '#252525' : '#f8f8f8',
-                          color: theme === 'dark' ? '#FFFFFF' : '#333333',
-                          border: theme === 'dark' ? 'none' : '1px solid #dddddd'
+                          backgroundColor: theme === 'dark' ? '#2a2a2a' : '#f8f8f8',
+                          color: theme === 'dark' ? '#BBDEFB' : '#333333',
+                          border: theme === 'dark' ? '1px solid #444444' : '1px solid #dddddd',
+                          borderRadius: '8px',
+                          boxShadow: theme === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.2)' : ''
                         }}>
-                          <i className="fas fa-question-circle fa-3x mb-3" style={{ color: theme === 'dark' ? '#4caf50' : '#4caf50' }}></i>
-                          <p style={{ color: theme === 'dark' ? '#FFFFFF' : '#333333' }}>No questions added yet. Use the form above to add your first question.</p>
+                          <i className="fas fa-question-circle fa-3x mb-3" style={{ color: theme === 'dark' ? '#2196f3' : '#4caf50' }}></i>
+                          <p style={{ color: theme === 'dark' ? '#EEEEEE' : '#333333' }}>No questions added yet. Use the form above to add your first question.</p>
                         </div>
                       ) : (
                         <DndContext
@@ -1243,7 +1371,9 @@ const QuestionPackEditor = () => {
 
         {/* Edit Question Modal - Ensure it's properly shown */}
         {showModal && (
-          <div className="modal-backdrop">
+          <div className="modal-backdrop" style={{
+            backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)'
+          }}>
             <motion.div 
               className="modal"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -1251,37 +1381,48 @@ const QuestionPackEditor = () => {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: "spring", damping: 25 }}
               style={{
-                backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff',
-                color: theme === 'dark' ? '#ffffff' : '#333333',
-                boxShadow: theme === 'dark' ? '0 10px 25px rgba(0, 0, 0, 0.5)' : '0 10px 25px rgba(0, 0, 0, 0.2)',
-                border: theme === 'dark' ? 'none' : '1px solid #cccccc'
+                backgroundColor: theme === 'dark' ? '#212121' : '#ffffff',
+                color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                boxShadow: theme === 'dark' ? '0 10px 30px rgba(0, 0, 0, 0.7)' : '0 10px 25px rgba(0, 0, 0, 0.2)',
+                border: theme === 'dark' ? '1px solid #444444' : '1px solid #cccccc',
+                borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
               }}
             >
               <div className="modal-header" style={{
-                borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #dddddd'
+                borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #dddddd',
+                backgroundColor: theme === 'dark' ? '#1a1a1a' : ''
               }}>
                 <motion.h3 
                   className="modal-title" 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.1 }}
-                  style={{ color: theme === 'dark' ? '#ffffff' : '#333333', fontWeight: 'bold' }}
+                  style={{ color: theme === 'dark' ? '#BBDEFB' : '#333333', fontWeight: 'bold' }}
                 >
-                  <i className="fas fa-edit mr-2"></i> Edit Question
+                  <i className="fas fa-edit mr-2" style={{ color: theme === 'dark' ? '#2196f3' : '' }}></i> Edit Question
                 </motion.h3>
                 <button 
                   className="close-button" 
                   onClick={handleCloseModal}
-                  style={{ color: theme === 'dark' ? '#ffffff' : '#666666' }}
+                  style={{ 
+                    color: theme === 'dark' ? '#BBBBBB' : '#666666',
+                    backgroundColor: theme === 'dark' ? '#333333' : 'transparent',
+                    borderRadius: '50%'
+                  }}
                 >
                   <i className="fas fa-times"></i>
                 </button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{
+                backgroundColor: theme === 'dark' ? '#212121' : ''
+              }}>
                 {editingQuestion && (
                   <div>
                     <div className="form-group">
-                      <label htmlFor="edit-question-text" className="required-label" style={{ color: theme === 'dark' ? '#FFFFFF' : '' }}>Question</label>
+                      <label htmlFor="edit-question-text" className="required-label" style={{ 
+                        color: theme === 'dark' ? '#BBDEFB' : '#333333',
+                        fontWeight: 'bold'
+                      }}>Question</label>
                       <motion.textarea
                         id="edit-question-text"
                         className="form-control"
@@ -1292,9 +1433,9 @@ const QuestionPackEditor = () => {
                         rows="3"
                         whileFocus={{ boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.25)" }}
                         style={{
-                          backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                          color: theme === 'dark' ? '#ffffff' : '#333333',
-                          borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                          backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                          color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                          borderColor: theme === 'dark' ? '#555555' : '#999999'
                         }}
                       ></motion.textarea>
                     </div>
@@ -1304,7 +1445,10 @@ const QuestionPackEditor = () => {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 }}
-                      style={{ color: theme === 'dark' ? '#ffffff' : '#333333', fontWeight: 'bold' }}
+                      style={{ 
+                        color: theme === 'dark' ? '#BBDEFB' : '#333333', 
+                        fontWeight: 'bold' 
+                      }}
                     >
                       Options <small className="text-muted" style={{ color: theme === 'dark' ? '#CCCCCC' : '#666666' }}>
                         (at least 2 required)
@@ -1321,13 +1465,23 @@ const QuestionPackEditor = () => {
                           exit={{ opacity: 0, y: -20, height: 0 }}
                           transition={{ duration: 0.3, delay: index * 0.05 }}
                           layout
-                          style={{ backgroundColor: theme === 'dark' ? '#333333' : '#f8f8f8', border: theme === 'dark' ? 'none' : '1px solid #e0e0e0' }}
+                          style={{ 
+                            backgroundColor: theme === 'dark' 
+                              ? (option.isCorrect ? 'rgba(76, 175, 80, 0.15)' : '#333333') 
+                              : (option.isCorrect ? 'rgba(76, 175, 80, 0.08)' : '#f8f8f8'),
+                            border: theme === 'dark' 
+                              ? (option.isCorrect ? '1px solid #4caf50' : '1px solid #444444') 
+                              : '1px solid #e0e0e0',
+                            boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.2)' : ''
+                          }}
                         >
                           <motion.div 
                             className="option-number"
                             whileHover={{ scale: 1.1 }}
                             style={{ 
-                              backgroundColor: theme === 'dark' ? '#444444' : '#e0e0e0',
+                              backgroundColor: theme === 'dark' 
+                                ? (option.isCorrect ? '#388e3c' : '#444444') 
+                                : (option.isCorrect ? '#4caf50' : '#e0e0e0'),
                               color: theme === 'dark' ? '#ffffff' : '#333333'
                             }}
                           >
@@ -1346,9 +1500,9 @@ const QuestionPackEditor = () => {
                               required={index < 2}
                               whileFocus={{ boxShadow: "0 0 0 3px rgba(33, 150, 243, 0.25)" }}
                               style={{
-                                backgroundColor: theme === 'dark' ? '#2d2d2d' : '#ffffff',
-                                color: theme === 'dark' ? '#ffffff' : '#333333',
-                                borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#999999'
+                                backgroundColor: theme === 'dark' ? '#333333' : '#ffffff',
+                                color: theme === 'dark' ? '#EEEEEE' : '#333333',
+                                borderColor: theme === 'dark' ? '#555555' : '#999999'
                               }}
                             />
                           </div>
@@ -1364,7 +1518,8 @@ const QuestionPackEditor = () => {
                                 style={{
                                   backgroundColor: theme === 'dark' ? '#388e3c' : '#4caf50',
                                   color: theme === 'dark' ? '#ffffff' : '#ffffff',
-                                  borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#43a047'
+                                  borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#43a047',
+                                  boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.3)' : ''
                                 }}
                               >
                                 <i className="fas fa-check-circle"></i> Correct
@@ -1377,9 +1532,10 @@ const QuestionPackEditor = () => {
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.97 }}
                                 style={{
-                                  backgroundColor: theme === 'dark' ? '#333333' : '#f0f0f0',
-                                  color: theme === 'dark' ? '#ffffff' : '#666666',
-                                  borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#dddddd'
+                                  backgroundColor: theme === 'dark' ? '#2a2a2a' : '#f0f0f0',
+                                  color: theme === 'dark' ? '#BBBBBB' : '#666666',
+                                  borderColor: theme === 'dark' ? '#444444' : '#dddddd',
+                                  boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.2)' : ''
                                 }}
                               >
                                 <i className="far fa-circle"></i> Mark Correct
@@ -1398,7 +1554,8 @@ const QuestionPackEditor = () => {
                             style={{
                               backgroundColor: theme === 'dark' ? '#d32f2f' : '#f44336',
                               color: theme === 'dark' ? '#ffffff' : '#ffffff',
-                              opacity: editingQuestion.options.length <= 2 ? '0.5' : '1'
+                              opacity: editingQuestion.options.length <= 2 ? '0.5' : '1',
+                              boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.3)' : ''
                             }}
                           >
                             <i className="fas fa-times"></i>
@@ -1416,7 +1573,8 @@ const QuestionPackEditor = () => {
                         whileTap={{ scale: 0.97 }}
                         style={{
                           borderColor: theme === 'dark' ? '#2196f3' : '#2196f3',
-                          color: theme === 'dark' ? '#2196f3' : '#2196f3'
+                          color: theme === 'dark' ? '#2196f3' : '#2196f3',
+                          backgroundColor: theme === 'dark' ? 'rgba(33, 150, 243, 0.05)' : ''
                         }}
                       >
                         <i className="fas fa-plus"></i> Add Option
@@ -1426,7 +1584,8 @@ const QuestionPackEditor = () => {
                 )}
               </div>
               <div className="modal-footer" style={{
-                borderTop: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #dddddd'
+                borderTop: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #dddddd',
+                backgroundColor: theme === 'dark' ? '#1a1a1a' : ''
               }}>
                 <motion.button 
                   type="button" 
@@ -1435,9 +1594,10 @@ const QuestionPackEditor = () => {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   style={{
-                    backgroundColor: theme === 'dark' ? '#424242' : '#6c757d',
+                    backgroundColor: theme === 'dark' ? '#333333' : '#6c757d',
                     color: theme === 'dark' ? '#ffffff' : '#ffffff',
-                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#5a6268'
+                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#5a6268',
+                    boxShadow: theme === 'dark' ? '0 2px 6px rgba(0, 0, 0, 0.3)' : ''
                   }}
                 >
                   <i className="fas fa-times mr-2"></i> Cancel
@@ -1448,13 +1608,18 @@ const QuestionPackEditor = () => {
                   onClick={handleSaveEditedQuestion}
                   whileHover={{ 
                     scale: 1.03, 
-                    boxShadow: "0 4px 8px rgba(33, 150, 243, 0.3)"
+                    boxShadow: theme === 'dark' 
+                      ? "0 4px 12px rgba(33, 150, 243, 0.4)"
+                      : "0 4px 8px rgba(33, 150, 243, 0.3)"
                   }}
                   whileTap={{ scale: 0.97 }}
                   style={{
-                    backgroundColor: theme === 'dark' ? '#2196f3' : '#007bff',
+                    background: theme === 'dark' 
+                      ? 'linear-gradient(90deg, #2196f3, #3f51b5)'
+                      : '#007bff',
                     color: theme === 'dark' ? '#ffffff' : '#ffffff',
-                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#0069d9'
+                    borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#0069d9',
+                    boxShadow: theme === 'dark' ? '0 2px 8px rgba(33, 150, 243, 0.3)' : ''
                   }}
                 >
                   <i className="fas fa-save mr-2"></i> Save Changes

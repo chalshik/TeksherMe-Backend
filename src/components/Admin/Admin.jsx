@@ -190,8 +190,8 @@ const Analytics = ({ questionPacks, categories, testAttempts, users }) => {
         display: false, // Hide legend as it's not needed for this visualization
       },
       title: {
-        display: true,
-        text: 'Number of Unique Users Who Completed Each Pack',
+        display: false, // Changed from true to false to hide the duplicated title
+        text: 'Test Passed',
         font: {
           size: 16,
           weight: 'bold'
@@ -261,24 +261,6 @@ const Analytics = ({ questionPacks, categories, testAttempts, users }) => {
             borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
           }}
         >
-          <div className="stat-value" style={{ color: theme === 'dark' ? '#2196f3' : '' }}>{users.length}</div>
-          <div className="stat-label" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '' }}>Registered Users</div>
-        </motion.div>
-        
-        <motion.div 
-          className="stat-card"
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          custom={1}
-          whileHover={{ y: -8, transition: { duration: 0.2 } }}
-          style={{
-            backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
-            color: theme === 'dark' ? '#ffffff' : '',
-            backgroundImage: theme === 'dark' ? 'none' : '',
-            borderTop: theme === 'dark' ? '4px solid #2196f3' : ''
-          }}
-        >
           <div className="stat-value" style={{ color: theme === 'dark' ? '#2196f3' : '' }}>{totalUniqueUsers}</div>
           <div className="stat-label" style={{ color: theme === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '' }}>Active Test Takers</div>
         </motion.div>
@@ -288,7 +270,7 @@ const Analytics = ({ questionPacks, categories, testAttempts, users }) => {
           variants={cardVariants}
           initial="hidden"
           animate="visible"
-          custom={2}
+          custom={1}
           whileHover={{ y: -8, transition: { duration: 0.2 } }}
           style={{
             backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
@@ -306,7 +288,7 @@ const Analytics = ({ questionPacks, categories, testAttempts, users }) => {
           variants={cardVariants}
           initial="hidden"
           animate="visible"
-          custom={3}
+          custom={2}
           whileHover={{ y: -8, transition: { duration: 0.2 } }}
           style={{
             backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
@@ -324,7 +306,7 @@ const Analytics = ({ questionPacks, categories, testAttempts, users }) => {
           variants={cardVariants}
           initial="hidden"
           animate="visible"
-          custom={4}
+          custom={3}
           whileHover={{ y: -8, transition: { duration: 0.2 } }}
           style={{
             backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
@@ -347,14 +329,14 @@ const Analytics = ({ questionPacks, categories, testAttempts, users }) => {
         variants={cardVariants}
         initial="hidden"
         animate="visible"
-        custom={5}
+        custom={4}
         style={{
           backgroundColor: theme === 'dark' ? '#1e1e1e' : '',
           color: theme === 'dark' ? '#ffffff' : '',
           borderLeft: theme === 'dark' ? '3px solid #2196f3' : ''
         }}
       >
-        <h3 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Unique Users per Pack</h3>
+        <h3 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Test Passed</h3>
         <div className="analytics-container">
           <div className="chart-card full-width" style={{
             backgroundColor: theme === 'dark' ? '#121212' : ''
@@ -543,10 +525,20 @@ const Admin = () => {
   };
 
   // Question Pack functions
-  const handleDeleteQuestionPack = async (packId) => {
-    if (window.confirm('Are you sure you want to delete this question pack? This action cannot be undone.')) {
+  const handleDeleteQuestionPack = async (packId, packName) => {
+    if (window.confirm(`Are you sure you want to delete the question pack "${packName}"? This will also remove all associated test attempts and bookmarks.`)) {
       try {
+        setError('');
+        // Delete the question pack from Firestore
         await deleteQuestionPack(packId);
+        // Refresh the question packs data
+        await fetchQuestionPacks();
+        setSuccess(`Question pack "${packName}" has been successfully deleted along with all associated test attempts and bookmarks.`);
+        
+        // Auto-clear success message after 5 seconds
+        setTimeout(() => {
+          setSuccess('');
+        }, 5000);
       } catch (error) {
         console.error('Error deleting question pack:', error);
         setError('Failed to delete question pack. Please try again.');
@@ -556,13 +548,13 @@ const Admin = () => {
 
   // Add function to handle resetting all question packs
   const handleResetAllQuestionPacks = async () => {
-    if (window.confirm('WARNING: Are you sure you want to delete ALL question packs? This action cannot be undone and will remove all question packs from the system.')) {
+    if (window.confirm('WARNING: Are you sure you want to delete ALL question packs? This action cannot be undone and will remove all question packs, associated test attempts, and question bookmarks from the system.')) {
       try {
         setIsResetting(true);
         setError('');
         
         // Create an array of promises to delete each question pack
-        const deletePromises = questionPacks.map(pack => deleteQuestionPack(pack.id));
+        const deletePromises = questionPacks.map(pack => deleteQuestionPack(pack.id, pack.name));
         
         // Execute all delete operations in parallel
         await Promise.all(deletePromises);
@@ -571,7 +563,7 @@ const Admin = () => {
         await fetchQuestionPacks();
         
         setIsResetting(false);
-        setSuccess('All question packs have been successfully deleted.');
+        setSuccess(`All ${questionPacks.length} question packs have been successfully deleted, along with their associated test attempts and bookmarks.`);
         
         // Auto-clear success message after 5 seconds
         setTimeout(() => {
@@ -1025,7 +1017,7 @@ const Admin = () => {
                         </Link>
                         <button
                           className="btn btn-danger btn-sm"
-                          onClick={() => handleDeleteQuestionPack(pack.id)}
+                          onClick={() => handleDeleteQuestionPack(pack.id, pack.name)}
                           title="Delete Question Pack"
                           style={{
                             backgroundColor: theme === 'dark' ? '#ff5a5f' : '',

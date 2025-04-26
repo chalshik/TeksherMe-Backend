@@ -398,10 +398,54 @@ export async function deleteQuestionPack(packId) {
     // First delete all questions and options
     await deleteAllQuestionsInPack(packId);
     
+    // Delete all test attempts associated with this pack
+    const testAttemptsRef = collection(db, "test_attempts");
+    const packAttemptsQuery = query(
+      testAttemptsRef, 
+      where("questionPackId", "==", packId)
+    );
+    const packAttemptsSnapshot = await getDocs(packAttemptsQuery);
+    
+    // Also check for attempts with the older field name pattern
+    const oldFieldAttemptsQuery = query(
+      testAttemptsRef, 
+      where("question_packs", "==", packId)
+    );
+    const oldFieldAttemptsSnapshot = await getDocs(oldFieldAttemptsQuery);
+    
+    // Delete all found test attempts
+    const attemptDeletePromises = [];
+    
+    packAttemptsSnapshot.docs.forEach(attemptDoc => {
+      attemptDeletePromises.push(deleteDoc(doc(db, "test_attempts", attemptDoc.id)));
+    });
+    
+    oldFieldAttemptsSnapshot.docs.forEach(attemptDoc => {
+      attemptDeletePromises.push(deleteDoc(doc(db, "test_attempts", attemptDoc.id)));
+    });
+    
+    // Delete any bookmarks associated with this question pack
+    const bookmarksRef = collection(db, "question_bookmarks");
+    const packBookmarksQuery = query(
+      bookmarksRef, 
+      where("packId", "==", packId)
+    );
+    const packBookmarksSnapshot = await getDocs(packBookmarksQuery);
+    
+    packBookmarksSnapshot.docs.forEach(bookmarkDoc => {
+      attemptDeletePromises.push(deleteDoc(doc(db, "question_bookmarks", bookmarkDoc.id)));
+    });
+    
+    // Wait for all deletions to complete
+    if (attemptDeletePromises.length > 0) {
+      await Promise.all(attemptDeletePromises);
+    }
+    
     // Then delete the pack itself
     const packRef = doc(db, "question_packs", packId);
     await deleteDoc(packRef);
     
+    console.log(`Question pack ${packId} deleted with all related test attempts and bookmarks`);
     return { success: true };
   } catch (error) {
     console.error("Error deleting question pack:", error);
