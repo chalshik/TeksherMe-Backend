@@ -18,6 +18,7 @@
   padding: 32px;
   text-align: center;
   animation: fadeIn var(--transition-medium);
+  position: relative; /* Added for absolute positioning of theme toggle */
 }
 
 .login-title {
@@ -37,6 +38,25 @@
   text-align: left;
 }
 
+.login-form .form-control {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-form .form-control:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.25);
+  outline: none;
+}
+
+/* Dark theme specific modifications */
+body.dark .login-form .form-control:focus {
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.4);
+}
+
+body.dark .login-form .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .login-button {
   width: 100%;
   padding: 10px;
@@ -48,16 +68,33 @@
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
 .login-button:hover {
   background-color: rgba(11, 110, 153, 0.9);
 }
 
-.login-error {
+.login-button:active {
+  transform: scale(0.98);
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error-message {
   margin-top: 16px;
   color: var(--color-red);
   font-size: 14px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(255, 0, 0, 0.05);
+}
+
+body.dark .error-message {
+  background-color: rgba(255, 0, 0, 0.1);
 }
 
 .login-loading {
@@ -71,6 +108,25 @@
   color: var(--color-text-secondary);
   padding-top: 16px;
   border-top: 1px solid var(--border-default);
+}
+
+/* Theme toggle positioning in login */
+.login-card .theme-toggle-container {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 5;
+}
+
+.login-card .theme-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.login-card .theme-toggle .toggle-label {
+  display: none;
 }
 
 @media (max-width: 480px) {

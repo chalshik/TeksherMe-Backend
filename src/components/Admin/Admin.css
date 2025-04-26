@@ -677,4 +677,51 @@ h2 {
   font-weight: 700;
   color: var(--color-blue);
   margin-bottom: 0.5rem;
+}
+
+/* Add styling for the button group in section headers */
+.section-header .button-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-header .btn-danger {
+  background-color: #ff5a5f;
+  border-color: #ff5a5f;
+  color: white;
+}
+
+.section-header .btn-danger:hover {
+  background-color: #ff3a40;
+  border-color: #ff3a40;
+}
+
+.section-header .btn-danger:disabled {
+  background-color: #ffa0a3;
+  border-color: #ffa0a3;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* This will override the dark theme for the button when disabled */
+.section-header .btn-danger:disabled i {
+  opacity: 0.7;
+}
+
+/* Success message styling */
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
+  padding: 10px 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+/* Dark theme for success message */
+body.dark .alert-success {
+  background-color: #1a472a;
+  color: #ffffff;
+  border-color: #2d8549;
 } 

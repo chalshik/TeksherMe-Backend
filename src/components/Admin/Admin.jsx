@@ -386,6 +386,7 @@ const Admin = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
   
   // Filter state for question packs
   const [packFilters, setPackFilters] = useState({
@@ -431,7 +432,8 @@ const Admin = () => {
   const {
     questionPacks,
     loading: packsLoading,
-    removeQuestionPack: deleteQuestionPack
+    removeQuestionPack: deleteQuestionPack,
+    fetchQuestionPacks
   } = useQuestionPacks();
   
   const {
@@ -548,6 +550,37 @@ const Admin = () => {
       } catch (error) {
         console.error('Error deleting question pack:', error);
         setError('Failed to delete question pack. Please try again.');
+      }
+    }
+  };
+
+  // Add function to handle resetting all question packs
+  const handleResetAllQuestionPacks = async () => {
+    if (window.confirm('WARNING: Are you sure you want to delete ALL question packs? This action cannot be undone and will remove all question packs from the system.')) {
+      try {
+        setIsResetting(true);
+        setError('');
+        
+        // Create an array of promises to delete each question pack
+        const deletePromises = questionPacks.map(pack => deleteQuestionPack(pack.id));
+        
+        // Execute all delete operations in parallel
+        await Promise.all(deletePromises);
+        
+        // Refresh the question packs data
+        await fetchQuestionPacks();
+        
+        setIsResetting(false);
+        setSuccess('All question packs have been successfully deleted.');
+        
+        // Auto-clear success message after 5 seconds
+        setTimeout(() => {
+          setSuccess('');
+        }, 5000);
+      } catch (error) {
+        setIsResetting(false);
+        console.error('Error resetting all question packs:', error);
+        setError('Failed to reset all question packs. Please try again.');
       }
     }
   };
@@ -825,14 +858,31 @@ const Admin = () => {
           borderBottom: theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : ''
         }}>
           <h2 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Question Packs</h2>
-          <Link to="/admin/question-pack" className="btn btn-primary" style={{
-            backgroundColor: theme === 'dark' ? '#2196f3' : ''
-          }}>
-            <i className="fas fa-plus" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i> Add Question Pack
-          </Link>
+          <div className="button-group">
+            <motion.button
+              className="btn btn-danger"
+              onClick={handleResetAllQuestionPacks}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                backgroundColor: theme === 'dark' ? '#ff5a5f' : '',
+                marginRight: '10px'
+              }}
+              disabled={loading || isResetting || questionPacks.length === 0}
+            >
+              <i className="fas fa-trash-alt" style={{ color: theme === 'dark' ? '#ffffff' : '#333333', marginRight: '5px' }}></i> 
+              {isResetting ? 'Resetting...' : 'Reset All'}
+            </motion.button>
+            <Link to="/admin/question-pack" className="btn btn-primary" style={{
+              backgroundColor: theme === 'dark' ? '#2196f3' : ''
+            }}>
+              <i className="fas fa-plus" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i> Add Question Pack
+            </Link>
+          </div>
         </div>
         
         {error && <div className="alert alert-danger">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
         
         <div className="filters-container" style={{
           backgroundColor: theme === 'dark' ? '#1a1a1a' : '',

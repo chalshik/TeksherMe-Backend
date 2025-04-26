@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../firebase/hooks';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +10,8 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login, user, loading: authLoading } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   // Check if user is already logged in
   useEffect(() => {
@@ -35,12 +39,29 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2 className="login-title">Welcome Back</h2>
+    <div className="login-container" style={{
+      backgroundColor: isDark ? 'var(--color-bg)' : ''
+    }}>
+      <div className="login-card" style={{
+        backgroundColor: isDark ? 'var(--color-bg-elevated)' : '',
+        boxShadow: isDark ? 'var(--shadow-prominent)' : '',
+        color: isDark ? 'var(--color-text)' : ''
+      }}>
+        <div className="theme-toggle-container" style={{ 
+          position: 'absolute', 
+          top: '15px', 
+          right: '15px'
+        }}>
+          <ThemeToggle />
+        </div>
+        <h2 className="login-title" style={{
+          color: isDark ? 'var(--color-text)' : ''
+        }}>Welcome Back</h2>
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email">
+            <label htmlFor="email" style={{
+              color: isDark ? 'var(--color-text-secondary)' : ''
+            }}>
               <i className="fas fa-envelope"></i> Email Address
             </label>
             <input
@@ -52,11 +73,18 @@ const Login = () => {
               required
               placeholder="Enter your email"
               autoComplete="email"
+              style={{
+                backgroundColor: isDark ? 'var(--input-bg)' : '',
+                color: isDark ? 'var(--color-text)' : '',
+                borderColor: isDark ? 'var(--input-border)' : ''
+              }}
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="password">
+            <label htmlFor="password" style={{
+              color: isDark ? 'var(--color-text-secondary)' : ''
+            }}>
               <i className="fas fa-lock"></i> Password
             </label>
             <input
@@ -68,15 +96,25 @@ const Login = () => {
               required
               placeholder="Enter your password"
               autoComplete="current-password"
+              style={{
+                backgroundColor: isDark ? 'var(--input-bg)' : '',
+                color: isDark ? 'var(--color-text)' : '',
+                borderColor: isDark ? 'var(--input-border)' : ''
+              }}
             />
           </div>
           
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message" style={{
+            color: 'var(--color-red)'
+          }}>{error}</div>}
           
           <button 
             type="submit" 
             className="login-button" 
             disabled={authLoading}
+            style={{
+              backgroundColor: isDark ? 'var(--color-blue)' : ''
+            }}
           >
             {authLoading ? (
               <>
@@ -89,8 +127,11 @@ const Login = () => {
             )}
           </button>
         </form>
-        <div className="login-footer">
-          Secure login with Firebase Authentication
+        <div className="login-footer" style={{
+          color: isDark ? 'var(--color-text-secondary)' : '',
+          borderTopColor: isDark ? 'var(--border-default)' : ''
+        }}>
+          &copy; {new Date().getFullYear()} TeksherMe
         </div>
       </div>
     </div>
