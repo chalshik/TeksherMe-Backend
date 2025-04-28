@@ -43,6 +43,7 @@ const QuestionPackEditor = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState('settings');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Use our custom hooks instead of direct Firebase calls
   const { categories, loading: categoriesLoading } = useCategories();
@@ -708,7 +709,14 @@ const QuestionPackEditor = () => {
       return;
     }
     
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+    
     try {
+      setIsSubmitting(true);
+      setError('');
       console.log("Saving pack with questions:", packDetails.questions);
       
       // Ensure questions have valid format for Firebase
@@ -743,6 +751,8 @@ const QuestionPackEditor = () => {
     } catch (err) {
       console.error("Error saving question pack:", err);
       setError('Error saving question pack: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -802,14 +812,25 @@ const QuestionPackEditor = () => {
                   onClick={handleSavePack}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  disabled={isSubmitting}
                   style={{
                     background: theme === 'dark' ? 'linear-gradient(90deg, #2196f3, #3f51b5)' : '',
                     color: theme === 'dark' ? '#ffffff' : '',
                     borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '',
-                    boxShadow: theme === 'dark' ? '0 4px 12px rgba(33, 150, 243, 0.4)' : ''
+                    boxShadow: theme === 'dark' ? '0 4px 12px rgba(33, 150, 243, 0.4)' : '',
+                    opacity: isSubmitting ? 0.7 : 1,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  <i className="fas fa-save mr-2"></i> Save Question Pack
+                  {isSubmitting ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save mr-2"></i> Save Question Pack
+                    </>
+                  )}
                 </motion.button>
               </div>
             </div>

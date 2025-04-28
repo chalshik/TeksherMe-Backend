@@ -369,6 +369,8 @@ const Admin = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [deletingPackId, setDeletingPackId] = useState(null);
   
   // Filter state for question packs
   const [packFilters, setPackFilters] = useState({
@@ -437,7 +439,31 @@ const Admin = () => {
   } = useUsers();
 
   // Loading state
-  const loading = categoriesLoading || packsLoading || commercialsLoading || testAttemptsLoading || usersLoading;
+  const loading = categoriesLoading || packsLoading || commercialsLoading || testAttemptsLoading || usersLoading || isRefreshing;
+
+  // Refresh data function
+  const refreshData = async () => {
+    try {
+      setIsRefreshing(true);
+      await fetchQuestionPacks();
+      setSuccess('Data refreshed successfully');
+      
+      // Auto-clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccess('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      setError('Failed to refresh data. Please try again.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Add effect to refresh data on component mount
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   // Filter change handler
   const handleFilterChange = (e) => {
@@ -529,6 +555,7 @@ const Admin = () => {
     if (window.confirm(`Are you sure you want to delete the question pack "${packName}"? This will also remove all associated test attempts and bookmarks.`)) {
       try {
         setError('');
+        setDeletingPackId(packId);
         // Delete the question pack from Firestore
         await deleteQuestionPack(packId);
         // Refresh the question packs data
@@ -542,6 +569,8 @@ const Admin = () => {
       } catch (error) {
         console.error('Error deleting question pack:', error);
         setError('Failed to delete question pack. Please try again.');
+      } finally {
+        setDeletingPackId(null);
       }
     }
   };
@@ -852,6 +881,20 @@ const Admin = () => {
           <h2 style={{ color: theme === 'dark' ? '#ffffff' : '' }}>Question Packs</h2>
           <div className="button-group">
             <motion.button
+              className="btn btn-info"
+              onClick={refreshData}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                backgroundColor: theme === 'dark' ? '#17a2b8' : '',
+                marginRight: '10px'
+              }}
+              disabled={loading || isRefreshing}
+            >
+              <i className={`fas ${isRefreshing ? 'fa-spinner fa-spin' : 'fa-sync-alt'}`} style={{ color: theme === 'dark' ? '#ffffff' : '#333333', marginRight: '5px' }}></i> 
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </motion.button>
+            <motion.button
               className="btn btn-danger"
               onClick={handleResetAllQuestionPacks}
               whileHover={{ scale: 1.05 }}
@@ -1019,16 +1062,23 @@ const Admin = () => {
                           className="btn btn-danger btn-sm"
                           onClick={() => handleDeleteQuestionPack(pack.id, pack.name)}
                           title="Delete Question Pack"
+                          disabled={loading || deletingPackId === pack.id}
                           style={{
                             backgroundColor: theme === 'dark' ? '#ff5a5f' : '',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             padding: '0.375rem 0.5rem',
-                            marginLeft: '0.5rem'
+                            marginLeft: '0.5rem',
+                            opacity: deletingPackId === pack.id ? 0.7 : 1,
+                            cursor: deletingPackId === pack.id ? 'not-allowed' : 'pointer'
                           }}
                         >
-                          <i className="fas fa-trash-alt" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
+                          {deletingPackId === pack.id ? (
+                            <i className="fas fa-spinner fa-spin" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
+                          ) : (
+                            <i className="fas fa-trash-alt" style={{ color: theme === 'dark' ? '#ffffff' : '#333333' }}></i>
+                          )}
                         </button>
                       </div>
                     </td>
